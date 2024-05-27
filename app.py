@@ -6,19 +6,22 @@ import os
 import jpype
 import tempfile
 
-# Charger les variables d'environnement depuis ~/.profile
-if os.path.exists(os.path.expanduser("~/.profile")):
-    with open(os.path.expanduser("~/.profile")) as f:
-        env_vars = f.readlines()
-    for var in env_vars:
-        var = var.strip()
-        if var and '=' in var:
-            key, value = var.split('=', 1)
-            os.environ[key] = value
+# Fonction pour télécharger et configurer Java
+@st.cache_resource
+def setup_java():
+    java_version = "11.0.11"
+    java_dir = f"/tmp/jdk-{java_version}"
+    if not os.path.exists(java_dir):
+        os.system(f"wget -qO- https://download.java.net/openjdk/jdk11/ri/openjdk-11+28_linux-x64_bin.tar.gz | tar -xz -C /tmp")
+    os.environ["JAVA_HOME"] = java_dir
+    os.environ["PATH"] = f"{java_dir}/bin:" + os.environ["PATH"]
+
+# Appeler la fonction pour s'assurer que Java est configuré
+setup_java()
 
 # Vérifier si JAVA_HOME est défini
 if 'JAVA_HOME' not in os.environ:
-    st.error("JAVA_HOME is not set. Make sure setup.sh is executed correctly.")
+    st.error("JAVA_HOME is not set. Make sure the Java setup script is executed correctly.")
 
 # Fonction pour lire un fichier Access et récupérer les données spécifiques
 def read_access_file(db_path, classpath, progress_callback=None):
