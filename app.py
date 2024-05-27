@@ -158,7 +158,7 @@ if mode == "Conversion de fichiers Access en CSV":
                 progress_bar.progress(current_progress)
 
             # Lire les données du fichier Access
-            data = read_access_file(tmp_file_path, classpath, update_progress)
+            data = read_access_file(tmp_file_path, ucanaccess_jars, update_progress)
             
             # Sauvegarder les résultats intermédiaires
             csv_data, file_name = save_to_csv(data, f"{uploaded_file.name.split('.')[0]}.csv")
