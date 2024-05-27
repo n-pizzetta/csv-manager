@@ -31,7 +31,6 @@ else:
     st.write(f"JAVA_HOME: {os.environ['JAVA_HOME']}")
     st.write(f"PATH: {os.environ['PATH']}")
 
-
 # Fonction pour lire un fichier Access et récupérer les données spécifiques
 def read_access_file(db_path, classpath, progress_callback=None):
     conn = None
