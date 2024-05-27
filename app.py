@@ -22,6 +22,8 @@ setup_java()
 # Vérifier si JAVA_HOME est défini
 if 'JAVA_HOME' not in os.environ:
     st.error("JAVA_HOME is not set. Make sure the Java setup script is executed correctly.")
+else: 
+    st.success("Java is correctly configured.")
 
 # Fonction pour lire un fichier Access et récupérer les données spécifiques
 def read_access_file(db_path, classpath, progress_callback=None):
