@@ -2,4 +2,3 @@ streamlit
 pandas
 jaydebeapi
 jpype1
-default-jre
