@@ -6,19 +6,6 @@ import os
 import jpype
 import tempfile
 
-# Liste des fichiers JAR nécessaires pour UCanAccess
-ucanaccess_jars = [
-    'UCanAccess-5.0.1.bin/ucanaccess-5.0.1.jar',
-    'UCanAccess-5.0.1.bin/loader/ucanload.jar',
-    'UCanAccess-5.0.1.bin/lib/commons-lang3-3.8.1.jar',
-    'UCanAccess-5.0.1.bin/lib/commons-logging-1.2.jar',
-    'UCanAccess-5.0.1.bin/lib/hsqldb-2.5.0.jar',
-    'UCanAccess-5.0.1.bin/lib/jackcess-3.0.1.jar'
-]
-
-# Concaténer les chemins des fichiers JAR correctement
-classpath = ":".join(ucanaccess_jars)
-
 
 def setup_java():
     if 'JAVA_HOME' not in os.environ:
@@ -44,7 +31,7 @@ def setup_java():
         st.error("JAVA_HOME is not set.")
         return None
     
-jvm_path = setup_java()
+#jvm_path = setup_java()
 
 # Fonction pour lire un fichier Access et récupérer les données spécifiques
 def read_access_file(db_path, ucanaccess_jars, progress_callback=None):
@@ -150,9 +137,11 @@ if mode == "Conversion de fichiers Access en CSV":
         # Concaténer les chemins des fichiers JAR correctement
         classpath = ":".join(ucanaccess_jars)
 
-        # Vérifier si la JVM est déjà démarrée
-        if jvm_path and not jpype.isJVMStarted():
-            jpype.startJVM(jvm_path, f"-Djava.class.path={classpath}")
+        if not jpype.isJVMStarted():
+            jpype.startJVM(
+                jpype.getDefaultJVMPath(),
+                "-Djava.class.path=" + classpath
+                )
         
         progress_bar = st.progress(0)
         total_files = len(uploaded_files)
