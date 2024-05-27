@@ -20,7 +20,7 @@ ucanaccess_jars = [
 classpath = ":".join(ucanaccess_jars)
 
 # Fonction pour télécharger et configurer Java
-@st.cache_resource
+
 def setup_java():
     java_version = "11.0.11"
     java_dir = f"/tmp/jdk-{java_version}"
