@@ -127,6 +127,9 @@ if mode == "Conversion de fichiers Access en CSV":
         # Obtenir le répertoire de travail courant
         current_dir = os.getcwd()
 
+        # Afficher le répertoire courant pour le débogage
+        st.write(f"Current directory: {current_dir}")
+
         # Liste des fichiers JAR nécessaires pour UCanAccess
         ucanaccess_jars = [
             'ucanaccess-5.0.1.jar',
@@ -140,9 +143,12 @@ if mode == "Conversion de fichiers Access en CSV":
         # Concaténer les chemins des fichiers JAR correctement
         classpath = ":".join([os.path.join(current_dir, "UCanAccess-5.0.1.bin", jar) for jar in ucanaccess_jars])
 
+        # Afficher le classpath pour le débogage
+        st.write(f"Classpath: {classpath}")
+
         if not jpype.isJVMStarted():
             jpype.startJVM(
-                "/usr/lib/jvm/java-11-openjdk-amd64-Djava.class.path=" + classpath
+                f"/usr/lib/jvm/java-11-openjdk-amd64-Djava.class.path={classpath}"
                 )
         
         progress_bar = st.progress(0)
