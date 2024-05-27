@@ -11,10 +11,14 @@ import tempfile
 def setup_java():
     java_version = "11.0.11"
     java_dir = f"/tmp/jdk-{java_version}"
+    java_tar_url = f"https://download.java.net/openjdk/jdk11/ri/openjdk-11+28_linux-x64_bin.tar.gz"
     if not os.path.exists(java_dir):
-        os.system(f"wget -qO- https://download.java.net/openjdk/jdk11/ri/openjdk-11+28_linux-x64_bin.tar.gz | tar -xz -C /tmp")
-    os.environ["JAVA_HOME"] = java_dir
-    os.environ["PATH"] = f"{java_dir}/bin:" + os.environ["PATH"]
+        st.write("Downloading and extracting Java...")
+        os.system(f"wget -qO- {java_tar_url} | tar -xz -C /tmp")
+    os.environ["JAVA_HOME"] = f"{java_dir}/jdk-11"
+    os.environ["PATH"] = f"{os.environ['JAVA_HOME']}/bin:" + os.environ["PATH"]
+    st.write("Java installation complete.")
+    st.write(f"JAVA_HOME is set to {os.environ['JAVA_HOME']}")
 
 # Appeler la fonction pour s'assurer que Java est configuré
 setup_java()
@@ -22,8 +26,11 @@ setup_java()
 # Vérifier si JAVA_HOME est défini
 if 'JAVA_HOME' not in os.environ:
     st.error("JAVA_HOME is not set. Make sure the Java setup script is executed correctly.")
-else: 
+else:
     st.success("Java is correctly configured.")
+    st.write(f"JAVA_HOME: {os.environ['JAVA_HOME']}")
+    st.write(f"PATH: {os.environ['PATH']}")
+
 
 # Fonction pour lire un fichier Access et récupérer les données spécifiques
 def read_access_file(db_path, classpath, progress_callback=None):
