@@ -31,6 +31,27 @@ else:
     st.write(f"JAVA_HOME: {os.environ['JAVA_HOME']}")
     st.write(f"PATH: {os.environ['PATH']}")
 
+# Fonction pour vérifier le chemin de libjvm.so
+def get_jvm_path():
+    possible_paths = [
+        os.path.join(os.environ['JAVA_HOME'], 'lib', 'server', 'libjvm.so'),
+        os.path.join(os.environ['JAVA_HOME'], 'lib', 'jvm', 'server', 'libjvm.so'),
+        os.path.join(os.environ['JAVA_HOME'], 'jre', 'lib', 'server', 'libjvm.so')
+    ]
+    for path in possible_paths:
+        if os.path.exists(path):
+            return path
+    return None
+
+# Démarrer la JVM en spécifiant explicitement le chemin vers libjvm.so
+jvm_path = get_jvm_path()
+if jvm_path:
+    st.write(f"JVM path: {jvm_path}")
+    if not jpype.isJVMStarted():
+        jpype.startJVM(jvm_path, f"-Djava.class.path={classpath}")
+else:
+    st.error("JVM path not found. Make sure JAVA_HOME is set correctly.")
+
 
 # Fonction pour lire un fichier Access et récupérer les données spécifiques
 def read_access_file(db_path, classpath, progress_callback=None):
