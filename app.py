@@ -43,15 +43,6 @@ def get_jvm_path():
             return path
     return None
 
-# Démarrer la JVM en spécifiant explicitement le chemin vers libjvm.so
-jvm_path = get_jvm_path()
-if jvm_path:
-    st.write(f"JVM path: {jvm_path}")
-    if not jpype.isJVMStarted():
-        jpype.startJVM(jvm_path, f"-Djava.class.path={classpath}")
-else:
-    st.error("JVM path not found. Make sure JAVA_HOME is set correctly.")
-
 
 # Fonction pour lire un fichier Access et récupérer les données spécifiques
 def read_access_file(db_path, classpath, progress_callback=None):
@@ -155,15 +146,15 @@ if mode == "Conversion de fichiers Access en CSV":
 
         # Concaténer les chemins des fichiers JAR correctement
         classpath = ":".join(ucanaccess_jars)
-
-        # Vérifier si la JVM est déjà démarrée
-        if not jpype.isJVMStarted():
-            jvm_path = os.path.join(os.environ['JAVA_HOME'], 'lib', 'server', 'libjvm.so')
+        
+        # Démarrer la JVM en spécifiant explicitement le chemin vers libjvm.so
+        jvm_path = get_jvm_path()
+        if jvm_path:
             st.write(f"JVM path: {jvm_path}")
-            if not os.path.exists(jvm_path):
-                st.error("JVM path not found. Make sure JAVA_HOME is set correctly.")
-            else:
+            if not jpype.isJVMStarted():
                 jpype.startJVM(jvm_path, f"-Djava.class.path={classpath}")
+        else:
+            st.error("JVM path not found. Make sure JAVA_HOME is set correctly.")
         
         progress_bar = st.progress(0)
         total_files = len(uploaded_files)
