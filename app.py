@@ -6,6 +6,14 @@ import os
 import jpype
 import tempfile
 
+# Lire la variable JAVA_HOME depuis le fichier configuré par setup.sh
+if os.path.exists(os.path.expanduser("~/.streamlit/env_vars.sh")):
+    with open(os.path.expanduser("~/.streamlit/env_vars.sh")) as f:
+        env_vars = f.readlines()
+    for var in env_vars:
+        key, value = var.strip().split("=")
+        os.environ[key] = value
+
 # Fonction pour lire un fichier Access et récupérer les données spécifiques
 def read_access_file(db_path, classpath, progress_callback=None):
     conn = None
@@ -18,7 +26,6 @@ def read_access_file(db_path, classpath, progress_callback=None):
 
         if progress_callback:
             progress_callback(0.1)  # 10% du processus terminé (connexion définie)
-
 
         # Connexion à la base de données
         conn = jaydebeapi.connect("net.ucanaccess.jdbc.UcanaccessDriver", 
@@ -64,13 +71,11 @@ def save_to_csv(data, file_name):
 
 # Fonction pour lire des fichiers CSV/Excel et les concaténer
 def read_and_concat_files(uploaded_files):
-
     combined_data = pd.DataFrame()
     progress_bar = st.progress(0)
     total_files = len(uploaded_files)
 
     for i, uploaded_file in enumerate(uploaded_files):
-
         current_progress = i / total_files
         progress_bar.progress(current_progress)
 
@@ -101,23 +106,24 @@ if mode == "Conversion de fichiers Access en CSV":
     if uploaded_files:
         # Liste des fichiers JAR nécessaires pour UCanAccess
         ucanaccess_jars = [
-            'ucanaccess-5.0.1.jar',
-            os.path.join('loader', 'ucanload.jar'),
-            os.path.join('lib', 'commons-lang3-3.8.1.jar'),
-            os.path.join('lib', 'commons-logging-1.2.jar'),
-            os.path.join('lib', 'hsqldb-2.5.0.jar'),
-            os.path.join('lib', 'jackcess-3.0.1.jar')
+            'UCanAccess-5.0.1.bin/ucanaccess-5.0.1.jar',
+            'UCanAccess-5.0.1.bin/loader/ucanload.jar',
+            'UCanAccess-5.0.1.bin/lib/commons-lang3-3.8.1.jar',
+            'UCanAccess-5.0.1.bin/lib/commons-logging-1.2.jar',
+            'UCanAccess-5.0.1.bin/lib/hsqldb-2.5.0.jar',
+            'UCanAccess-5.0.1.bin/lib/jackcess-3.0.1.jar'
         ]
 
         # Concaténer les chemins des fichiers JAR correctement
-        classpath = ":".join([os.path.join("UCanAccess-5.0.1.bin", jar) for jar in ucanaccess_jars])
+        classpath = ":".join(ucanaccess_jars)
 
         # Vérifier si la JVM est déjà démarrée
         if not jpype.isJVMStarted():
-            jpype.startJVM(
-                jpype.getDefaultJVMPath(),
-                f"-Djava.class.path={classpath}"
-            )
+            jvm_path = jpype.getDefaultJVMPath()
+            if not jvm_path:
+                st.error("JVM path not found. Make sure JAVA_HOME is set correctly.")
+            else:
+                jpype.startJVM(jvm_path, f"-Djava.class.path={classpath}")
         
         progress_bar = st.progress(0)
         total_files = len(uploaded_files)
@@ -133,7 +139,6 @@ if mode == "Conversion de fichiers Access en CSV":
                 current_progress = (i + progress) / total_files
                 progress_bar.progress(current_progress)
 
-            
             # Lire les données du fichier Access
             data = read_access_file(tmp_file_path, classpath, update_progress)
             
