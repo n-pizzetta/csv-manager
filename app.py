@@ -31,6 +31,7 @@ else:
     st.write(f"JAVA_HOME: {os.environ['JAVA_HOME']}")
     st.write(f"PATH: {os.environ['PATH']}")
 
+
 # Fonction pour lire un fichier Access et récupérer les données spécifiques
 def read_access_file(db_path, classpath, progress_callback=None):
     conn = None
@@ -136,7 +137,7 @@ if mode == "Conversion de fichiers Access en CSV":
 
         # Vérifier si la JVM est déjà démarrée
         if not jpype.isJVMStarted():
-            jvm_path = jpype.getDefaultJVMPath()
+            jvm_path = os.path.join(os.environ['JAVA_HOME'], 'lib', 'server', 'libjvm.so')
             st.write(f"JVM path: {jvm_path}")
             if not jvm_path:
                 st.error("JVM path not found. Make sure JAVA_HOME is set correctly.")
