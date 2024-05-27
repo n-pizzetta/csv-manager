@@ -137,6 +137,7 @@ if mode == "Conversion de fichiers Access en CSV":
         # Vérifier si la JVM est déjà démarrée
         if not jpype.isJVMStarted():
             jvm_path = jpype.getDefaultJVMPath()
+            st.write(f"JVM path: {jvm_path}")
             if not jvm_path:
                 st.error("JVM path not found. Make sure JAVA_HOME is set correctly.")
             else:
