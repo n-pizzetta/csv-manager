@@ -20,6 +20,36 @@ ucanaccess_jars = [
 classpath = ":".join(ucanaccess_jars)
 
 
+def setup_java():
+    if 'JAVA_HOME' not in os.environ:
+        java_home_paths = [
+            '/usr/lib/jvm/java-11-openjdk-amd64',  # Chemin commun pour OpenJDK 11
+            '/usr/lib/jvm/default-java'  # Chemin alternatif pour default-java
+        ]
+        for path in java_home_paths:
+            if os.path.exists(path):
+                os.environ['JAVA_HOME'] = path
+                break
+    
+    if 'JAVA_HOME' in os.environ:
+        jvm_path = os.path.join(os.environ['JAVA_HOME'], 'lib', 'server', 'libjvm.so')
+        if os.path.exists(jvm_path):
+            st.success(f"Java is configured. JAVA_HOME: {os.environ['JAVA_HOME']}")
+            os.environ['PATH'] = f"{os.environ['JAVA_HOME']}/bin:" + os.environ['PATH']
+            return jvm_path
+        else:
+            st.error(f"libjvm.so not found in {jvm_path}.")
+            return None
+    else:
+        st.error("JAVA_HOME is not set.")
+        return None
+    
+jvm_path = setup_java()
+
+# Démarrer la JVM en spécifiant explicitement le chemin vers libjvm.so
+if jvm_path and not jpype.isJVMStarted():
+    jpype.startJVM(jvm_path, "-Djava.class.path=/path/to/ucanaccess.jar")
+
 # Fonction pour lire un fichier Access et récupérer les données spécifiques
 def read_access_file(db_path, classpath, progress_callback=None):
     conn = None
@@ -111,12 +141,22 @@ if mode == "Conversion de fichiers Access en CSV":
 
     if uploaded_files:
 
+        # Liste des fichiers JAR nécessaires pour UCanAccess
+        ucanaccess_jars = [
+            'UCanAccess-5.0.1.bin/ucanaccess-5.0.1.jar',
+            'UCanAccess-5.0.1.bin/loader/ucanload.jar',
+            'UCanAccess-5.0.1.bin/lib/commons-lang3-3.8.1.jar',
+            'UCanAccess-5.0.1.bin/lib/commons-logging-1.2.jar',
+            'UCanAccess-5.0.1.bin/lib/hsqldb-2.5.0.jar',
+            'UCanAccess-5.0.1.bin/lib/jackcess-3.0.1.jar'
+        ]
+
+        # Concaténer les chemins des fichiers JAR correctement
+        classpath = ":".join(ucanaccess_jars)
+
         # Vérifier si la JVM est déjà démarrée
-        if not jpype.isJVMStarted():
-            jpype.startJVM(
-                jpype.getDefaultJVMPath(),
-                f"-Djava.class.path={classpath}"
-            )
+        if jvm_path and not jpype.isJVMStarted():
+            jpype.startJVM(jvm_path, f"-Djava.class.path={classpath}")
         
         progress_bar = st.progress(0)
         total_files = len(uploaded_files)
