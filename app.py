@@ -11,8 +11,10 @@ if os.path.exists(os.path.expanduser("~/.profile")):
     with open(os.path.expanduser("~/.profile")) as f:
         env_vars = f.readlines()
     for var in env_vars:
-        key, value = var.strip().split("=")
-        os.environ[key] = value
+        var = var.strip()
+        if var and '=' in var:
+            key, value = var.split('=', 1)
+            os.environ[key] = value
 
 # Vérifier si JAVA_HOME est défini
 if 'JAVA_HOME' not in os.environ:
