@@ -41,7 +41,7 @@ def read_access_file(db_path, ucanaccess_jars, progress_callback=None):
 
     try:
         # Définition de la chaine de connexion
-        conn_string = f"jdbc:ucanaccess://{db_path};newDatabaseVersion=V2010"
+        conn_string = f"jdbc:ucanaccess://{db_path}"
 
         if progress_callback:
             progress_callback(0.1)  # 10% du processus terminé (connexion définie)
@@ -126,21 +126,20 @@ if mode == "Conversion de fichiers Access en CSV":
 
         # Liste des fichiers JAR nécessaires pour UCanAccess
         ucanaccess_jars = [
-            'UCanAccess-5.0.1.bin/ucanaccess-5.0.1.jar',
-            'UCanAccess-5.0.1.bin/loader/ucanload.jar',
-            'UCanAccess-5.0.1.bin/lib/commons-lang3-3.8.1.jar',
-            'UCanAccess-5.0.1.bin/lib/commons-logging-1.2.jar',
-            'UCanAccess-5.0.1.bin/lib/hsqldb-2.5.0.jar',
-            'UCanAccess-5.0.1.bin/lib/jackcess-3.0.1.jar'
+            'ucanaccess-5.0.1.jar',
+            os.path.join('loader', 'ucanload.jar'),
+            os.path.join('lib', 'commons-lang3-3.8.1.jar'),
+            os.path.join('lib', 'commons-logging-1.2.jar'),
+            os.path.join('lib', 'hsqldb-2.5.0.jar'),
+            os.path.join('lib', 'jackcess-3.0.1.jar')
         ]
 
         # Concaténer les chemins des fichiers JAR correctement
-        classpath = ":".join(ucanaccess_jars)
+        classpath = ":".join([os.path.join("UCanAccess-5.0.1.bin", jar) for jar in ucanaccess_jars])
 
         if not jpype.isJVMStarted():
             jpype.startJVM(
-                jpype.getDefaultJVMPath(),
-                "-Djava.class.path=" + classpath
+                "/usr/lib/jvm/java-11-openjdk-amd64-Djava.class.path=" + classpath
                 )
         
         progress_bar = st.progress(0)
@@ -162,13 +161,15 @@ if mode == "Conversion de fichiers Access en CSV":
             
             # Sauvegarder les résultats intermédiaires
             csv_data, file_name = save_to_csv(data, f"{uploaded_file.name.split('.')[0]}.csv")
+            st.write("Format du csv :")
+            st.write(csv_data)
             st.download_button(label=f"Télécharger le fichier CSV pour {uploaded_file.name}", data=csv_data, file_name=file_name, mime="text/csv")
             
             # Supprimer le fichier temporaire après traitement
             os.remove(tmp_file_path)
 
             # Mise à jour de la barre de progression pour terminer l'itération
-            update_progress(1.0)
+            progress_bar.progress(1.0)
 
 elif mode == "Concaténation de fichiers CSV/Excel":
     st.header("Concaténation de fichiers CSV/Excel")
