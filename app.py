@@ -46,12 +46,8 @@ def setup_java():
     
 jvm_path = setup_java()
 
-# Démarrer la JVM en spécifiant explicitement le chemin vers libjvm.so
-if jvm_path and not jpype.isJVMStarted():
-    jpype.startJVM(jvm_path, "-Djava.class.path=/path/to/ucanaccess.jar")
-
 # Fonction pour lire un fichier Access et récupérer les données spécifiques
-def read_access_file(db_path, classpath, progress_callback=None):
+def read_access_file(db_path, ucanaccess_jars, progress_callback=None):
     conn = None
     cursor = None
     data_frame = pd.DataFrame()
@@ -67,7 +63,7 @@ def read_access_file(db_path, classpath, progress_callback=None):
         conn = jaydebeapi.connect("net.ucanaccess.jdbc.UcanaccessDriver", 
                                   conn_string, 
                                   [], 
-                                  classpath)
+                                  ucanaccess_jars[0])
         
         if progress_callback:
             progress_callback(0.3)  # 30% du processus terminé (connexion établie)
