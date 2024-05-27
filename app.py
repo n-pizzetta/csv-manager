@@ -19,56 +19,6 @@ ucanaccess_jars = [
 # Concaténer les chemins des fichiers JAR correctement
 classpath = ":".join(ucanaccess_jars)
 
-# Fonction pour télécharger et configurer Java
-
-def setup_java():
-    java_version = "11.0.11"
-    java_dir = f"/tmp/jdk-{java_version}"
-    java_tar_url = f"https://download.java.net/openjdk/jdk11/ri/openjdk-11+28_linux-x64_bin.tar.gz"
-    if not os.path.exists(java_dir):
-        st.write("Downloading and extracting Java...")
-        os.system(f"wget -qO- {java_tar_url} | tar -xz -C /tmp")
-    os.environ["JAVA_HOME"] = f"{java_dir}/jdk-11"
-    os.environ["PATH"] = f"{os.environ['JAVA_HOME']}/bin:" + os.environ["PATH"]
-    st.write("Java installation complete.")
-    st.write(f"JAVA_HOME is set to {os.environ['JAVA_HOME']}")
-    
-    # Liste des fichiers pour vérifier où se trouve libjvm.so
-    for root, dirs, files in os.walk(os.environ["JAVA_HOME"]):
-        for name in files:
-            st.write(os.path.join(root, name))
-
-# Appeler la fonction pour s'assurer que Java est configuré
-setup_java()
-
-# Vérifier si JAVA_HOME est défini
-if 'JAVA_HOME' not in os.environ:
-    st.error("JAVA_HOME is not set. Make sure the Java setup script is executed correctly.")
-else:
-    st.success("Java is correctly configured.")
-    st.write(f"JAVA_HOME: {os.environ['JAVA_HOME']}")
-    st.write(f"PATH: {os.environ['PATH']}")
-
-# Fonction pour vérifier le chemin de libjvm.so
-def get_jvm_path():
-    possible_paths = [
-        os.path.join(os.environ['JAVA_HOME'], 'lib', 'server', 'libjvm.so'),
-        os.path.join(os.environ['JAVA_HOME'], 'lib', 'jvm', 'server', 'libjvm.so'),
-        os.path.join(os.environ['JAVA_HOME'], 'jre', 'lib', 'server', 'libjvm.so')
-    ]
-    for path in possible_paths:
-        if os.path.exists(path):
-            return path
-    return None
-
-# Démarrer la JVM en spécifiant explicitement le chemin vers libjvm.so
-jvm_path = get_jvm_path()
-if jvm_path:
-    st.write(f"JVM path: {jvm_path}")
-    if not jpype.isJVMStarted():
-        jpype.startJVM(jvm_path, f"-Djava.class.path={classpath}")
-else:
-    st.error("JVM path not found. Make sure JAVA_HOME is set correctly.")
 
 # Fonction pour lire un fichier Access et récupérer les données spécifiques
 def read_access_file(db_path, classpath, progress_callback=None):
@@ -163,12 +113,10 @@ if mode == "Conversion de fichiers Access en CSV":
 
         # Vérifier si la JVM est déjà démarrée
         if not jpype.isJVMStarted():
-            jvm_path = get_jvm_path()
-            st.write(f"JVM path: {jvm_path}")
-            if not jvm_path:
-                st.error("JVM path not found. Make sure JAVA_HOME is set correctly.")
-            else:
-                jpype.startJVM(jvm_path, f"-Djava.class.path={classpath}")
+            jpype.startJVM(
+                jpype.getDefaultJVMPath(),
+                f"-Djava.class.path={classpath}"
+            )
         
         progress_bar = st.progress(0)
         total_files = len(uploaded_files)
@@ -202,6 +150,7 @@ elif mode == "Concaténation de fichiers CSV/Excel":
     uploaded_files = st.file_uploader("Choisissez des fichiers CSV ou Excel", type=["csv", "xlsx"], accept_multiple_files=True)
 
     if uploaded_files:
+
         combined_data = read_and_concat_files(uploaded_files)
         st.write("Données concaténées")
         st.write(combined_data)
