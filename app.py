@@ -6,9 +6,9 @@ import os
 import jpype
 import tempfile
 
-# Lire la variable JAVA_HOME depuis le fichier configuré par setup.sh
-if os.path.exists(os.path.expanduser("~/.streamlit/env_vars.sh")):
-    with open(os.path.expanduser("~/.streamlit/env_vars.sh")) as f:
+# Charger les variables d'environnement depuis ~/.profile
+if os.path.exists(os.path.expanduser("~/.profile")):
+    with open(os.path.expanduser("~/.profile")) as f:
         env_vars = f.readlines()
     for var in env_vars:
         key, value = var.strip().split("=")
