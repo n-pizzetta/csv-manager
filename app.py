@@ -124,6 +124,9 @@ if mode == "Conversion de fichiers Access en CSV":
 
     if uploaded_files:
 
+        # Obtenir le répertoire de travail courant
+        current_dir = os.getcwd()
+
         # Liste des fichiers JAR nécessaires pour UCanAccess
         ucanaccess_jars = [
             'ucanaccess-5.0.1.jar',
@@ -135,7 +138,7 @@ if mode == "Conversion de fichiers Access en CSV":
         ]
 
         # Concaténer les chemins des fichiers JAR correctement
-        classpath = ":".join([os.path.join("UCanAccess-5.0.1.bin", jar) for jar in ucanaccess_jars])
+        classpath = ":".join([os.path.join(current_dir, "UCanAccess-5.0.1.bin", jar) for jar in ucanaccess_jars])
 
         if not jpype.isJVMStarted():
             jpype.startJVM(
