@@ -5,6 +5,12 @@ from io import BytesIO
 import os
 import jpype
 import tempfile
+import zipfile
+
+
+###########################
+## Fonctions utilitaires ##
+###########################
 
 # Fonction pour configurer Java
 def setup_java():
@@ -33,8 +39,11 @@ def setup_java():
         return None
 
 
-# Appeler la fonction pour s'assurer que Java est configuré
-#jvm_path = setup_java()
+# Fonction pour mettre à jour la barre de progression
+def update_progress(progress):
+    current_progress = (i + progress) / total_files
+    progress_bar.progress(current_progress)
+
 
 # Fonction pour lire un fichier Access et récupérer les données spécifiques
 def read_access_file(db_path, ucanaccess_jars, progress_callback=None):
@@ -88,11 +97,30 @@ def read_access_file(db_path, ucanaccess_jars, progress_callback=None):
     
     return data_frame
 
+
 # Fonction pour sauvegarder en CSV
 def save_to_csv(data, file_name):
     output = BytesIO()
     data.to_csv(output, index=False)
     return output.getvalue(), file_name
+
+
+# Afficher les boutons de téléchargement pour chaque fichier converti
+@st.experimental_fragment
+def download_file(conver_files):
+    for file_name, csv_data in conver_files.items():
+        st.download_button(label=f"Télécharger le fichier CSV pour {file_name}", data=csv_data, file_name=file_name, mime="text/csv")
+
+
+# Fonction pour créer un fichier ZIP
+def create_zip_file(files_dict):
+    zip_buffer = BytesIO()
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+        for file_name, file_data in files_dict.items():
+            zip_file.writestr(f"{file_name}.csv", file_data)
+    zip_buffer.seek(0)
+    return zip_buffer
+
 
 # Fonction pour lire des fichiers CSV/Excel et les concaténter
 def read_and_concat_files(uploaded_files):
@@ -122,6 +150,14 @@ def read_and_concat_files(uploaded_files):
     progress_bar.empty()
 
     return combined_data
+
+
+#########################
+## Interface Streamlit ##
+#########################
+
+# Appeler la fonction pour s'assurer que Java est configuré
+#jvm_path = setup_java()
 
 # Interface utilisateur Streamlit
 st.title("Application de conversion et concaténation de fichiers")
@@ -182,11 +218,6 @@ if mode == "Conversion de fichiers Access en CSV":
                 with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
                     tmp_file.write(uploaded_file.getbuffer())
                     tmp_file_path = tmp_file.name
-                
-                # Fonction pour mettre à jour la barre de progression
-                def update_progress(progress):
-                    current_progress = (i + progress) / total_files
-                    progress_bar.progress(current_progress)
 
                 # Lire les données du fichier Access
                 data = read_access_file(tmp_file_path, ucanaccess_jars, update_progress)
@@ -202,16 +233,20 @@ if mode == "Conversion de fichiers Access en CSV":
                 # Supprimer le fichier temporaire après traitement
                 os.remove(tmp_file_path)
 
-        # Afficher les boutons de téléchargement pour chaque fichier converti
-        @st.experimental_fragment
-        def download_file(conver_files):
-            for file_name, csv_data in conver_files.items():
-                st.download_button(label=f"Télécharger le fichier CSV pour {file_name}", data=csv_data, file_name=file_name, mime="text/csv")
         
         download_file(st.session_state.converted_files)
-            
-            
 
+        # Créer un fichier ZIP contenant tous les fichiers CSV convertis
+        zip_buffer = create_zip_file(st.session_state.converted_files)
+        
+        # Créer un bouton pour télécharger le fichier ZIP
+        st.download_button(
+            label="Télécharger tous les fichiers convertis",
+            data=zip_buffer,
+            file_name="converted_files.zip",
+            mime="application/zip"
+        )
+            
             
 
 elif mode == "Concaténation de fichiers CSV/Excel":
