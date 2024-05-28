@@ -134,6 +134,9 @@ if mode == "Conversion de fichiers Access en CSV":
     uploaded_files = st.file_uploader("Choisissez des fichiers .accdb", type="accdb", accept_multiple_files=True)
 
     if uploaded_files:
+        
+        if 'converted_files' not in st.session_state:
+            st.session_state.converted_files = {}
 
         # Obtenir le répertoire de travail courant
         current_dir = os.getcwd()
