@@ -6,6 +6,7 @@ import os
 import jpype
 import tempfile
 import zipfile
+import gc
 
 
 ###########################
@@ -39,36 +40,21 @@ def setup_java():
         return None
 
 
-# Fonction pour mettre à jour la barre de progression
-def update_progress(progress):
-    current_progress = (i + progress) / total_files
-    progress_bar.progress(current_progress)
-
-
 # Fonction pour lire un fichier Access et récupérer les données spécifiques
-def read_access_file(db_path, ucanaccess_jars, progress_callback=None):
+def read_access_file(db_path, ucanaccess_jars):
     conn = None
     cursor = None
     data_frame = pd.DataFrame()
 
-    # Message initial
-    status_text.text("Converting...")
-
     try:
         # Définition de la chaine de connexion
         conn_string = f"jdbc:ucanaccess://{db_path}"
-
-        if progress_callback:
-            progress_callback(0.1)  # 10% du processus terminé (connexion définie)
 
         # Connexion à la base de données
         conn = jaydebeapi.connect("net.ucanaccess.jdbc.UcanaccessDriver", 
                                   conn_string, 
                                   [], 
                                   ucanaccess_jars[0])
-        
-        if progress_callback:
-            progress_callback(0.3)  # 30% du processus terminé (connexion établie)
 
         cursor = conn.cursor()
         
@@ -76,9 +62,6 @@ def read_access_file(db_path, ucanaccess_jars, progress_callback=None):
         cursor.execute("SELECT Date_Jour_H_M_d, PDM, TV_corrige, TV_brut FROM Trafic_Minute")
         results = cursor.fetchall()
         data_frame = pd.DataFrame(results, columns=[column[0] for column in cursor.description])
-
-        if progress_callback:
-            progress_callback(0.8)  # 80% du processus terminé (requête exécutée)
     
     except Exception as e:
         st.error(f"Error processing {db_path}: {str(e)}")
@@ -105,29 +88,19 @@ def save_to_csv(data, file_name):
     return output.getvalue(), file_name
 
 
-# Afficher les boutons de téléchargement pour chaque fichier converti
+# Fonction pour créer un fichier ZIP et ajouter des fichiers
+def add_files_to_zip(zip_obj, files):
+    for file_name, file_data in files.items():
+        zip_obj.writestr(file_name, file_data)
+
 @st.experimental_fragment
-def download_file(conver_files):
-    for file_name, csv_data in conver_files.items():
-        st.download_button(label=f"Télécharger le fichier CSV pour {file_name}", data=csv_data, file_name=file_name, mime="text/csv")
-
-
-# Fonction pour créer un fichier ZIP
-@st.experimental_fragment
-def create_zip_file(files_dict):
-    zip_buffer = BytesIO()
-    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
-        for file_name, file_data in files_dict.items():
-            zip_file.writestr(f"{file_name}.csv", file_data)
-    zip_buffer.seek(0)
-
-    # Créer un bouton pour télécharger le fichier ZIP
+def download_zip_file(zip_buffer, file_name):
     st.download_button(
         label="Télécharger tous les fichiers convertis",
         data=zip_buffer,
-        file_name="converted_files.zip",
+        file_name=file_name,
         mime="application/zip"
-    )
+        )
 
 
 # Fonction pour lire des fichiers CSV/Excel et les concaténter
@@ -152,15 +125,6 @@ def read_and_concat_files(uploaded_files):
             st.error(f"Unsupported file format: {uploaded_file.name}")
             continue
         combined_data = pd.concat([combined_data, data], ignore_index=True)
-    
-    # Mise à jour du message après le traitement
-    status_text.text("Processing complete!")
-    progress_bar.empty()
-
-    return combined_data
-
-
-
 
 
 #########################
@@ -168,7 +132,7 @@ def read_and_concat_files(uploaded_files):
 #########################
 
 # Appeler la fonction pour s'assurer que Java est configuré
-#jvm_path = setup_java()
+# jvm_path = setup_java()
 
 # Interface utilisateur Streamlit
 st.title("Application de conversion et concaténation de fichiers")
@@ -182,15 +146,9 @@ if mode == "Conversion de fichiers Access en CSV":
 
     if uploaded_files:
 
-        if 'converted_files' not in st.session_state:
-            st.session_state.converted_files = {}
 
         # Obtenir le répertoire de travail courant
         current_dir = os.getcwd()
-
-        # Afficher le répertoire courant pour le débogage
-        #st.write(f"Current directory: {current_dir}")
-        #st.write(f"Fichiers présents dans le répertoire : {os.listdir(current_dir)}")
 
         # Liste des fichiers JAR nécessaires pour UCanAccess
         ucanaccess_jars = [
@@ -205,67 +163,60 @@ if mode == "Conversion de fichiers Access en CSV":
         # Concaténer les chemins des fichiers JAR correctement
         classpath = ":".join([os.path.join(current_dir, "UCanAccess-5.0.1.bin", jar) for jar in ucanaccess_jars])
 
-        # Afficher le classpath pour le débogage
-        #st.write(f"Classpath: {classpath}")
-
         if not jpype.isJVMStarted():
-            #st.write("Starting JVM...")
             jpype.startJVM(
                 jpype.getDefaultJVMPath(),
-                *['-Xms512m', '-Xmx2048m'],     # Augmentationd de la mémoire allouée à la JVM
-                #classpath = "-Djava.class.path=" + classpath
-                classpath = classpath
-                )
-            #st.write(f"JVM started successfully")
-        
+                *['-Xms512m', '-Xmx2048m'],
+                classpath=classpath
+            )
+
         progress_bar = st.progress(0)
         status_text = st.empty()
         total_files = len(uploaded_files)
 
-        for i, uploaded_file in enumerate(uploaded_files):
-            file_name = uploaded_file.name.split('.')[0]
-            if file_name not in st.session_state.converted_files:
-                # Créer un fichier temporaire pour l'upload
-                with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
-                    tmp_file.write(uploaded_file.getbuffer())
-                    tmp_file_path = tmp_file.name
+        zip_buffer = BytesIO()
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            batch_size = 3
+            for i in range(0, total_files, batch_size):
+                batch = uploaded_files[i:i + batch_size]
+                temp_files_batch = {}
 
-                # Lire les données du fichier Access
-                data = read_access_file(tmp_file_path, ucanaccess_jars, update_progress)
-                # Sauvegarder les résultats intermédiaires
-                csv_data, file_name = save_to_csv(data, f"{uploaded_file.name.split('.')[0]}.csv")
-                st.session_state.converted_files[file_name] = csv_data
+                for uploaded_file in batch:
 
-                # Mise à jour de la barre de progression et du message
-                progress_bar.progress(1.0)
-                status_text.text("Converting complete!")
-                progress_bar.empty()
+                    with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+                        tmp_file.write(uploaded_file.getbuffer())
+                        tmp_file_path = tmp_file.name
 
-                # Supprimer le fichier temporaire après traitement
-                os.remove(tmp_file_path)
+                    data = read_access_file(tmp_file_path, ucanaccess_jars)
+                    csv_data, csv_file_name = save_to_csv(data, uploaded_file.name)
+                    temp_files_batch[csv_file_name] = csv_data
 
+                    os.remove(tmp_file_path)
 
-        # Créer un fichier ZIP contenant tous les fichiers CSV convertis
-        st.write("Télécharger tous les fichiers convertis")
-        create_zip_file(st.session_state.converted_files)
+                add_files_to_zip(zipf, temp_files_batch)
 
+                for temp_file_path in temp_files_batch.values():
+                    del temp_file_path
 
-        # Afficher les boutons de téléchargement pour chaque fichier converti
-        st.write("Télécharger les fichiers convertis individuellement")
-        download_file(st.session_state.converted_files)
+                gc.collect()
 
-
+                progress_bar.progress((i + batch_size) / total_files)
         
+        status_text.text("Conversion terminée!")
+        zip_buffer.seek(0)
+
+        # Proposer le téléchargement du fichier ZIP final
+
+        download_zip_file(zip_buffer, "converted_files.zip")
         
-            
-            
+        progress_bar.empty()
+        status_text.empty()
 
 elif mode == "Concaténation de fichiers CSV/Excel":
     st.header("Concaténation de fichiers CSV/Excel")
     uploaded_files = st.file_uploader("Choisissez des fichiers CSV ou Excel", type=["csv", "xlsx"], accept_multiple_files=True)
 
     if uploaded_files:
-
         combined_data = read_and_concat_files(uploaded_files)
         st.write("Données concaténées")
         st.write(combined_data)
