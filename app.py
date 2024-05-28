@@ -6,22 +6,25 @@ import os
 import jpype
 import tempfile
 
-
+# Fonction pour configurer Java
 def setup_java():
-    if 'JAVA_HOME' not in os.environ:
-        java_home_paths = [
-            '/usr/lib/jvm/java-11-openjdk-amd64',  # Chemin commun pour OpenJDK 11
-            '/usr/lib/jvm/default-java'  # Chemin alternatif pour default-java
-        ]
-        for path in java_home_paths:
-            if os.path.exists(path):
-                os.environ['JAVA_HOME'] = path
-                break
+    # Ajouter des chemins communs pour OpenJDK 11
+    java_home_paths = [
+        '/usr/lib/jvm/java-11-openjdk-amd64',  # Chemin commun pour OpenJDK 11
+        '/usr/lib/jvm/default-java'  # Chemin alternatif pour default-java
+    ]
+    
+    # Vérifier et définir JAVA_HOME
+    for path in java_home_paths:
+        if os.path.exists(path):
+            os.environ['JAVA_HOME'] = path
+            break
     
     if 'JAVA_HOME' in os.environ:
+        st.write(f"JAVA_HOME is set to {os.environ['JAVA_HOME']}")
         jvm_path = os.path.join(os.environ['JAVA_HOME'], 'lib', 'server', 'libjvm.so')
         if os.path.exists(jvm_path):
-            st.success(f"Java is configured. JAVA_HOME: {os.environ['JAVA_HOME']}")
+            st.success(f"Java is configured. libjvm.so found at {jvm_path}")
             os.environ['PATH'] = f"{os.environ['JAVA_HOME']}/bin:" + os.environ['PATH']
             return jvm_path
         else:
@@ -30,8 +33,9 @@ def setup_java():
     else:
         st.error("JAVA_HOME is not set.")
         return None
-    
-#jvm_path = setup_java()
+
+# Appeler la fonction pour s'assurer que Java est configuré
+jvm_path = setup_java()
 
 # Fonction pour lire un fichier Access et récupérer les données spécifiques
 def read_access_file(db_path, ucanaccess_jars, progress_callback=None):
@@ -149,9 +153,12 @@ if mode == "Conversion de fichiers Access en CSV":
         st.write(f"Classpath: {classpath}")
 
         if not jpype.isJVMStarted():
+            st.write("Starting JVM...")
             jpype.startJVM(
-                f"/usr/lib/jvm/java-11-openjdk-amd64-Djava.class.path={classpath}"
+                jpype.getDefaultJVMPath(), 
+                "-Djava.class.path=" + classpath
                 )
+            st.write(f"JVM started successfully")
         
         progress_bar = st.progress(0)
         total_files = len(uploaded_files)
