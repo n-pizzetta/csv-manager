@@ -90,7 +90,6 @@ def read_access_file(db_path, ucanaccess_jars, progress_callback=None):
     return data_frame
 
 # Fonction pour sauvegarder en CSV
-@st.cache_data
 def save_to_csv(data, file_name):
     output = BytesIO()
     data.to_csv(output, index=False)
@@ -204,8 +203,13 @@ if mode == "Conversion de fichiers Access en CSV":
                 # Supprimer le fichier temporaire après traitement
                 os.remove(tmp_file_path)
 
-        for file_name, csv_data in st.session_state.converted_files.items():
-            st.download_button(label=f"Télécharger le fichier CSV pour {file_name}", data=csv_data, file_name=file_name, mime="text/csv")
+        # Afficher les boutons de téléchargement pour chaque fichier converti
+        @st.experimental_fragment
+        def download_file(conver_files):
+            for file_name, csv_data in conver_files.items():
+                st.download_button(label=f"Télécharger le fichier CSV pour {file_name}", data=csv_data, file_name=file_name, mime="text/csv")
+        
+        download_file(st.session_state.converted_files)
             
             
 
