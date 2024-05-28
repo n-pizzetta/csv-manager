@@ -32,6 +32,10 @@ def setup_java():
         st.error("JAVA_HOME is not set.")
         return None
 
+# Bouton de redémarrage
+if st.button('Redémarrer l\'application'):
+    st.experimental_rerun()
+
 # Appeler la fonction pour s'assurer que Java est configuré
 #jvm_path = setup_java()
 
@@ -161,7 +165,8 @@ if mode == "Conversion de fichiers Access en CSV":
             #st.write("Starting JVM...")
             jpype.startJVM(
                 jpype.getDefaultJVMPath(), 
-                "-Djava.class.path=" + classpath
+                classpath = "-Djava.class.path=" + classpath,
+                *['-Xms512m', '-Xmx2048m']     # Augmentationd de la mémoire allouée à la JVM
                 )
             #st.write(f"JVM started successfully")
         
