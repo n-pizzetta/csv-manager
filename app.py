@@ -130,6 +130,8 @@ if mode == "Conversion de fichiers Access en CSV":
         # Afficher le répertoire courant pour le débogage
         st.write(f"Current directory: {current_dir}")
 
+        st.write(f"Fichiers présents dans le répertoire : {os.listdir(current_dir)}")
+
         # Liste des fichiers JAR nécessaires pour UCanAccess
         ucanaccess_jars = [
             'ucanaccess-5.0.1.jar',
