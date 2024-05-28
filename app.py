@@ -32,9 +32,6 @@ def setup_java():
         st.error("JAVA_HOME is not set.")
         return None
 
-# Bouton de redémarrage
-if st.button('Redémarrer l\'application'):
-    st.experimental_rerun()
 
 # Appeler la fonction pour s'assurer que Java est configuré
 #jvm_path = setup_java()
