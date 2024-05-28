@@ -21,10 +21,8 @@ def setup_java():
             break
     
     if 'JAVA_HOME' in os.environ:
-        st.write(f"JAVA_HOME is set to {os.environ['JAVA_HOME']}")
         jvm_path = os.path.join(os.environ['JAVA_HOME'], 'lib', 'server', 'libjvm.so')
         if os.path.exists(jvm_path):
-            st.success(f"Java is configured. libjvm.so found at {jvm_path}")
             os.environ['PATH'] = f"{os.environ['JAVA_HOME']}/bin:" + os.environ['PATH']
             return jvm_path
         else:
@@ -35,7 +33,7 @@ def setup_java():
         return None
 
 # Appeler la fonction pour s'assurer que Java est configuré
-jvm_path = setup_java()
+#jvm_path = setup_java()
 
 # Fonction pour lire un fichier Access et récupérer les données spécifiques
 def read_access_file(db_path, ucanaccess_jars, progress_callback=None):
@@ -132,9 +130,8 @@ if mode == "Conversion de fichiers Access en CSV":
         current_dir = os.getcwd()
 
         # Afficher le répertoire courant pour le débogage
-        st.write(f"Current directory: {current_dir}")
-
-        st.write(f"Fichiers présents dans le répertoire : {os.listdir(current_dir)}")
+        #st.write(f"Current directory: {current_dir}")
+        #st.write(f"Fichiers présents dans le répertoire : {os.listdir(current_dir)}")
 
         # Liste des fichiers JAR nécessaires pour UCanAccess
         ucanaccess_jars = [
@@ -150,15 +147,15 @@ if mode == "Conversion de fichiers Access en CSV":
         classpath = ":".join([os.path.join(current_dir, "UCanAccess-5.0.1.bin", jar) for jar in ucanaccess_jars])
 
         # Afficher le classpath pour le débogage
-        st.write(f"Classpath: {classpath}")
+        #st.write(f"Classpath: {classpath}")
 
         if not jpype.isJVMStarted():
-            st.write("Starting JVM...")
+            #st.write("Starting JVM...")
             jpype.startJVM(
                 jpype.getDefaultJVMPath(), 
                 "-Djava.class.path=" + classpath
                 )
-            st.write(f"JVM started successfully")
+            #st.write(f"JVM started successfully")
         
         progress_bar = st.progress(0)
         total_files = len(uploaded_files)
@@ -179,8 +176,6 @@ if mode == "Conversion de fichiers Access en CSV":
             
             # Sauvegarder les résultats intermédiaires
             csv_data, file_name = save_to_csv(data, f"{uploaded_file.name.split('.')[0]}.csv")
-            st.write("Format du csv :")
-            st.write(csv_data)
             st.download_button(label=f"Télécharger le fichier CSV pour {uploaded_file.name}", data=csv_data, file_name=file_name, mime="text/csv")
             
             # Supprimer le fichier temporaire après traitement
