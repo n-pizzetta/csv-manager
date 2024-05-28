@@ -41,6 +41,9 @@ def read_access_file(db_path, ucanaccess_jars, progress_callback=None):
     cursor = None
     data_frame = pd.DataFrame()
 
+    # Message initial
+    status_text.text("Converting...")
+
     try:
         # Définition de la chaine de connexion
         conn_string = f"jdbc:ucanaccess://{db_path}"
@@ -94,10 +97,14 @@ def save_to_csv(data, file_name):
 def read_and_concat_files(uploaded_files):
     combined_data = pd.DataFrame()
     progress_bar = st.progress(0)
+    status_text = st.empty()
     total_files = len(uploaded_files)
 
+    # Message initial
+    status_text.text("Processing...")
+
     for i, uploaded_file in enumerate(uploaded_files):
-        current_progress = i / total_files
+        current_progress = (i+1) / total_files
         progress_bar.progress(current_progress)
 
         if uploaded_file.name.endswith('.csv'):
@@ -109,8 +116,9 @@ def read_and_concat_files(uploaded_files):
             continue
         combined_data = pd.concat([combined_data, data], ignore_index=True)
     
-    # Mise à jour de la barre de progression pour terminer l'itération
-    progress_bar.progress(1.0)
+    # Mise à jour du message après le traitement
+    status_text.text("Processing complete!")
+    progress_bar.empty()
 
     return combined_data
 
@@ -158,6 +166,7 @@ if mode == "Conversion de fichiers Access en CSV":
             #st.write(f"JVM started successfully")
         
         progress_bar = st.progress(0)
+        status_text = st.empty()
         total_files = len(uploaded_files)
 
         for i, uploaded_file in enumerate(uploaded_files):
@@ -174,6 +183,13 @@ if mode == "Conversion de fichiers Access en CSV":
             # Lire les données du fichier Access
             data = read_access_file(tmp_file_path, ucanaccess_jars, update_progress)
             
+            # Mise à jour de la barre de progression pour terminer l'itération
+            progress_bar.progress(1.0)
+            # Mise à jour du message après le traitement
+            status_text.text("Converting complete!")
+
+            progress_bar.empty()
+
             # Sauvegarder les résultats intermédiaires
             csv_data, file_name = save_to_csv(data, f"{uploaded_file.name.split('.')[0]}.csv")
             st.download_button(label=f"Télécharger le fichier CSV pour {uploaded_file.name}", data=csv_data, file_name=file_name, mime="text/csv")
@@ -181,8 +197,7 @@ if mode == "Conversion de fichiers Access en CSV":
             # Supprimer le fichier temporaire après traitement
             os.remove(tmp_file_path)
 
-            # Mise à jour de la barre de progression pour terminer l'itération
-            progress_bar.progress(1.0)
+            
 
 elif mode == "Concaténation de fichiers CSV/Excel":
     st.header("Concaténation de fichiers CSV/Excel")
