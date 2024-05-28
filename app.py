@@ -113,13 +113,21 @@ def download_file(conver_files):
 
 
 # Fonction pour créer un fichier ZIP
+@st.experimental_fragment
 def create_zip_file(files_dict):
     zip_buffer = BytesIO()
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
         for file_name, file_data in files_dict.items():
             zip_file.writestr(f"{file_name}.csv", file_data)
     zip_buffer.seek(0)
-    return zip_buffer
+
+    # Créer un bouton pour télécharger le fichier ZIP
+    st.download_button(
+        label="Télécharger tous les fichiers convertis",
+        data=zip_buffer,
+        file_name="converted_files.zip",
+        mime="application/zip"
+    )
 
 
 # Fonction pour lire des fichiers CSV/Excel et les concaténter
@@ -150,6 +158,9 @@ def read_and_concat_files(uploaded_files):
     progress_bar.empty()
 
     return combined_data
+
+
+
 
 
 #########################
@@ -233,19 +244,19 @@ if mode == "Conversion de fichiers Access en CSV":
                 # Supprimer le fichier temporaire après traitement
                 os.remove(tmp_file_path)
 
-        
-        download_file(st.session_state.converted_files)
 
         # Créer un fichier ZIP contenant tous les fichiers CSV convertis
-        zip_buffer = create_zip_file(st.session_state.converted_files)
+        st.write("Télécharger tous les fichiers convertis")
+        create_zip_file(st.session_state.converted_files)
+
+
+        # Afficher les boutons de téléchargement pour chaque fichier converti
+        st.write("Télécharger les fichiers convertis individuellement")
+        download_file(st.session_state.converted_files)
+
+
         
-        # Créer un bouton pour télécharger le fichier ZIP
-        st.download_button(
-            label="Télécharger tous les fichiers convertis",
-            data=zip_buffer,
-            file_name="converted_files.zip",
-            mime="application/zip"
-        )
+        
             
             
 
