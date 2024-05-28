@@ -173,7 +173,7 @@ if mode == "Conversion de fichiers Access en CSV":
         total_files = len(uploaded_files)
 
         for i, uploaded_file in enumerate(uploaded_files):
-
+            file_name = uploaded_file.name.split('.')[0]
             if file_name not in st.session_state.converted_files:
                 # Créer un fichier temporaire pour l'upload
                 with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
