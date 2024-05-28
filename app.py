@@ -173,32 +173,36 @@ if mode == "Conversion de fichiers Access en CSV":
         total_files = len(uploaded_files)
 
         for i, uploaded_file in enumerate(uploaded_files):
-            # Créer un fichier temporaire pour l'upload
-            with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
-                tmp_file.write(uploaded_file.getbuffer())
-                tmp_file_path = tmp_file.name
-            
-            # Fonction pour mettre à jour la barre de progression
-            def update_progress(progress):
-                current_progress = (i + progress) / total_files
-                progress_bar.progress(current_progress)
 
-            # Lire les données du fichier Access
-            data = read_access_file(tmp_file_path, ucanaccess_jars, update_progress)
-            
-            # Mise à jour de la barre de progression pour terminer l'itération
-            progress_bar.progress(1.0)
-            # Mise à jour du message après le traitement
-            status_text.text("Converting complete!")
+            if file_name not in st.session_state.converted_files:
+                # Créer un fichier temporaire pour l'upload
+                with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+                    tmp_file.write(uploaded_file.getbuffer())
+                    tmp_file_path = tmp_file.name
+                
+                # Fonction pour mettre à jour la barre de progression
+                def update_progress(progress):
+                    current_progress = (i + progress) / total_files
+                    progress_bar.progress(current_progress)
 
-            progress_bar.empty()
+                # Lire les données du fichier Access
+                data = read_access_file(tmp_file_path, ucanaccess_jars, update_progress)
+                # Sauvegarder les résultats intermédiaires
+                csv_data, file_name = save_to_csv(data, f"{uploaded_file.name.split('.')[0]}.csv")
+                st.session_state.converted_files[file_name] = csv_data
 
-            # Sauvegarder les résultats intermédiaires
-            csv_data, file_name = save_to_csv(data, f"{uploaded_file.name.split('.')[0]}.csv")
-            st.download_button(label=f"Télécharger le fichier CSV pour {uploaded_file.name}", data=csv_data, file_name=file_name, mime="text/csv")
+                # Mise à jour de la barre de progression et du message
+                progress_bar.progress(1.0)
+                status_text.text("Converting complete!")
+                progress_bar.empty()
+
+                # Supprimer le fichier temporaire après traitement
+                os.remove(tmp_file_path)
+
+        for file_name, csv_data in st.session_state.converted_files.items():
+            st.download_button(label=f"Télécharger le fichier CSV pour {file_name}", data=csv_data, file_name=f"{file_name}.csv", mime="text/csv")
             
-            # Supprimer le fichier temporaire après traitement
-            os.remove(tmp_file_path)
+            
 
             
 
