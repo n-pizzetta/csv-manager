@@ -164,9 +164,9 @@ if mode == "Conversion de fichiers Access en CSV":
         if not jpype.isJVMStarted():
             #st.write("Starting JVM...")
             jpype.startJVM(
-                jpype.getDefaultJVMPath(), 
-                classpath = "-Djava.class.path=" + classpath,
-                *['-Xms512m', '-Xmx2048m']     # Augmentationd de la mémoire allouée à la JVM
+                jpype.getDefaultJVMPath(),
+                *['-Xms512m', '-Xmx2048m'],     # Augmentationd de la mémoire allouée à la JVM
+                classpath = "-Djava.class.path=" + classpath
                 )
             #st.write(f"JVM started successfully")
         
