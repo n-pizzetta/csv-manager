@@ -37,7 +37,6 @@ def setup_java():
 #jvm_path = setup_java()
 
 # Fonction pour lire un fichier Access et récupérer les données spécifiques
-@st.cache_data
 def read_access_file(db_path, ucanaccess_jars, progress_callback=None):
     conn = None
     cursor = None
