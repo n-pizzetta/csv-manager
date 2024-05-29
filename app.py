@@ -126,11 +126,11 @@ def create_zip_file(files_dict):
     )
 
 @st.experimental_fragment
-def clear_converted_files(file_name=None):
-    if file_name:
-        del st.session_state.converted_files[file_name]
-    else:
-        st.session_state.converted_files = {}
+def clear_converted_files(uploaded_files):
+
+    st.session_state.converted_files = {}
+    st.experimental_rerun()
+
 
 
 # Fonction pour lire des fichiers CSV/Excel et les concaténter
@@ -178,6 +178,8 @@ st.title("Application de conversion et concaténation de fichiers")
 
 # Choix du mode d'utilisation
 mode = st.selectbox("Choisissez une option", ["Conversion de fichiers Access en CSV", "Concaténation de fichiers CSV/Excel"])
+
+uploaded_files = None
 
 if mode == "Conversion de fichiers Access en CSV":
     st.header("Conversion de fichiers Access en CSV")
@@ -247,13 +249,13 @@ if mode == "Conversion de fichiers Access en CSV":
                 progress_bar.progress(1.0)
                 status_text.text("Converting complete!")
                 progress_bar.empty()
+                progress_bar.empty()
 
                 # Supprimer le fichier temporaire après traitement
                 os.remove(tmp_file_path)
 
 
         # Créer un fichier ZIP contenant tous les fichiers CSV convertis
-        st.write("Télécharger tous les fichiers convertis")
         create_zip_file(st.session_state.converted_files)
 
 
