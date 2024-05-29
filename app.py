@@ -125,11 +125,9 @@ def create_zip_file(files_dict):
         on_click=clear_converted_files
     )
 
-@st.experimental_fragment
 def clear_converted_files():
-
     st.session_state.converted_files = {}
-    st.experimental_rerun()
+    st.rerun()
 
 
 
@@ -245,18 +243,20 @@ if mode == "Conversion de fichiers Access en CSV":
                 csv_data, file_name = save_to_csv(data, f"{uploaded_file.name.split('.')[0]}.csv")
                 st.session_state.converted_files[file_name] = csv_data
 
-                # Mise à jour de la barre de progression et du message
-                progress_bar.progress(1.0)
-                status_text.text("Converting complete!")
-                progress_bar.empty()
-                progress_bar.empty()
-
                 # Supprimer le fichier temporaire après traitement
                 os.remove(tmp_file_path)
 
-
         # Créer un fichier ZIP contenant tous les fichiers CSV convertis
         create_zip_file(st.session_state.converted_files)
+
+        # Mise à jour de la barre de progression et du message
+        progress_bar.progress(1.0)
+        status_text.text("Converting complete!")
+
+        progress_bar.empty()
+        status_text.empty()
+
+
 
 
         
