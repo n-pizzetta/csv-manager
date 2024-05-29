@@ -107,13 +107,6 @@ def save_to_csv(data, file_name):
     return output.getvalue(), file_name
 
 
-# Afficher les boutons de téléchargement pour chaque fichier converti
-@st.experimental_fragment
-def download_file(conver_files):
-    for file_name, csv_data in conver_files.items():
-        st.download_button(label=f"Télécharger le fichier CSV pour {file_name}", data=csv_data, file_name=file_name, mime="text/csv", on_click=clear_converted_files(file_name))
-
-
 # Fonction pour créer un fichier ZIP
 @st.experimental_fragment
 def create_zip_file(files_dict):
@@ -132,8 +125,8 @@ def create_zip_file(files_dict):
         on_click=clear_converted_files
     )
 
+@st.experimental_fragment
 def clear_converted_files(file_name=None):
-
     if file_name:
         del st.session_state.converted_files[file_name]
     else:
@@ -196,7 +189,7 @@ if mode == "Conversion de fichiers Access en CSV":
             st.session_state.converted_files = {}
         
         # Vérifier et nettoyer les fichiers si de nouveaux fichiers sont uploadés avant téléchargement
-        if st.session_state.get('converted_files', {}) and st.button("Nettoyer les fichiers convertis précédents"):
+        if st.session_state.get('converted_files', {}):
             clear_converted_files()
 
         # Obtenir le répertoire de travail courant
@@ -262,11 +255,6 @@ if mode == "Conversion de fichiers Access en CSV":
         # Créer un fichier ZIP contenant tous les fichiers CSV convertis
         st.write("Télécharger tous les fichiers convertis")
         create_zip_file(st.session_state.converted_files)
-
-
-        # Afficher les boutons de téléchargement pour chaque fichier converti
-        st.write("Télécharger les fichiers convertis individuellement")
-        download_file(st.session_state.converted_files)
 
 
         
