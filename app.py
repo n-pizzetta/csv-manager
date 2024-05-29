@@ -126,7 +126,7 @@ def create_zip_file(files_dict):
     )
 
 @st.experimental_fragment
-def clear_converted_files(uploaded_files):
+def clear_converted_files():
 
     st.session_state.converted_files = {}
     st.experimental_rerun()
