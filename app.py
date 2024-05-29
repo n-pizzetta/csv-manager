@@ -111,7 +111,7 @@ def save_to_csv(data, file_name):
 @st.experimental_fragment
 def download_file(conver_files):
     for file_name, csv_data in conver_files.items():
-        st.download_button(label=f"Télécharger le fichier CSV pour {file_name}", data=csv_data, file_name=file_name, mime="text/csv")
+        st.download_button(label=f"Télécharger le fichier CSV pour {file_name}", data=csv_data, file_name=file_name, mime="text/csv", on_click=clear_converted_files(file_name))
 
 
 # Fonction pour créer un fichier ZIP
@@ -128,8 +128,16 @@ def create_zip_file(files_dict):
         label="Télécharger tous les fichiers convertis",
         data=zip_buffer,
         file_name="converted_files.zip",
-        mime="application/zip"
+        mime="application/zip",
+        on_click=clear_converted_files
     )
+
+def clear_converted_files(file_name=None):
+
+    if file_name:
+        del st.session_state.converted_files[file_name]
+    else:
+        st.session_state.converted_files = {}
 
 
 # Fonction pour lire des fichiers CSV/Excel et les concaténter
@@ -186,6 +194,10 @@ if mode == "Conversion de fichiers Access en CSV":
 
         if 'converted_files' not in st.session_state:
             st.session_state.converted_files = {}
+        
+        # Vérifier et nettoyer les fichiers si de nouveaux fichiers sont uploadés avant téléchargement
+        if st.session_state.get('converted_files', {}) and st.button("Nettoyer les fichiers convertis précédents"):
+            clear_converted_files()
 
         # Obtenir le répertoire de travail courant
         current_dir = os.getcwd()
@@ -274,4 +286,4 @@ elif mode == "Concaténation de fichiers CSV/Excel":
 
         # Sauvegarder le fichier CSV final
         csv_data, final_file_name = save_to_csv(combined_data, "final_output.csv")
-        st.download_button(label="Télécharger le fichier CSV final", data=csv_data, file_name=final_file_name, mime="text/csv")
+        st.download_button(label="Télécharger le fichier CSV final", data=csv_data, file_name=final_file_name, mime="text/csv", on_click=clear_converted_files)
