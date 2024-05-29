@@ -73,9 +73,11 @@ def read_access_file(db_path, ucanaccess_jars, progress_callback=None):
         cursor = conn.cursor()
         
         # Exécuter une requête SQL et stocker les résultats dans un DataFrame pandas
-        cursor.execute("SELECT Date_Jour_H_M_d, PDM, TV_corrige, TV_brut FROM Trafic_Minute")
+        sql = "select Date_Jour_H_M_d, PDM, TV_corrige, TV_brut from Trafic_Minute"
+
+        cursor.execute(sql)
         results = cursor.fetchall()
-        data_frame = pd.DataFrame(results, columns=[column[0] for column in cursor.description])
+        data_frame = pd.DataFrame(results, columns=["Date_Jour_H_M_d", "PDM", "TV_corrige", "TV_brut"])
 
         if progress_callback:
             progress_callback(0.8)  # 80% du processus terminé (requête exécutée)
@@ -178,11 +180,7 @@ mode = st.selectbox("Choisissez une option", ["Conversion de fichiers Access en 
 
 if mode == "Conversion de fichiers Access en CSV":
     st.header("Conversion de fichiers Access en CSV")
-    uploaded_files = st.file_uploader("Choisissez des fichiers .accdb", type="accdb", accept_multiple_files=True)
-
-    if len(uploaded_files) > 3:
-        st.error('Vous ne pouvez pas télécharger plus de 3 fichiers.')
-        uploaded_files = uploaded_files[:3]  # Gardez seulement les 3 premiers fichiers
+    uploaded_files = st.file_uploader("Choisissez des fichiers .accdb en ne dépassant pas les 400MB", type="accdb", accept_multiple_files=True)
 
     if uploaded_files:
 
