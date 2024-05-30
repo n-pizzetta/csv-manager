@@ -115,14 +115,12 @@ def create_zip_file(files_dict):
         label="Télécharger tous les fichiers convertis",
         data=zip_buffer,
         file_name="converted_files.zip",
-        mime="application/zip"
+        mime="application/zip",
+        on_click=update_key,
     )
 
 
 def convert_files(uploaded_file):
-
-    if 'converted_files' not in st.session_state:
-        st.session_state.converted_files = {}
 
     # Obtenir le répertoire de travail courant
     current_dir = os.getcwd()
@@ -243,24 +241,24 @@ mode = st.selectbox("Choisissez une option", ["Conversion de fichiers Access en 
 
 if mode == "Conversion de fichiers Access en CSV":
     st.header("Conversion de fichiers Access en CSV")
-    st.session_state = {}
 
-    uploaded_files = None
-    uploaded_files = st.file_uploader("Choisissez des fichiers .accdb en ne dépassant pas les 400MB", type="accdb", accept_multiple_files=True)
+    if "uploader_key" not in st.session_state:
+        st.session_state.uploader_key = 0
+
+    if 'converted_files' not in st.session_state:
+        st.session_state.converted_files = {}
+
+    def update_key():
+        st.session_state.uploader_key += 1
+
+    uploaded_files = st.file_uploader("Choisissez des fichiers .accdb en ne dépassant pas les 400MB", type="accdb", accept_multiple_files=True, key=f"uploader_{st.session_state.uploader_key}")
         
     # Créer un bouton pour télécharger le fichier ZIP
-    if uploaded_files is not None:
+    if uploaded_files:
         if st.button("Convertir les fichiers"):
             convert_files(uploaded_files)
 
 
-
-
-
-
-        
-        
-            
             
 
 elif mode == "Concaténation de fichiers CSV/Excel":
