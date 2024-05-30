@@ -23,7 +23,7 @@ def check_memory():
     memory_info = process.memory_info()
 
     # Calculer la mémoire utilisée en Mo
-    memory_used_mb = memory_info.rss / (1024 * 1024 * 1024)
+    memory_used_mb = memory_info.rss / (1024 * 1024)
 
     # Calculer la mémoire disponible en Mo
     #memory_free_mb = memory_info.available / (1024 * 1024)
@@ -179,7 +179,7 @@ def convert_files(uploaded_file):
     total_files = len(uploaded_files)
 
     for i, uploaded_file in enumerate(uploaded_files):
-
+        
         file_name = uploaded_file.name.split('.')[0]
 
         # Créer un fichier temporaire pour l'upload
@@ -202,6 +202,9 @@ def convert_files(uploaded_file):
 
         # Supprimer le fichier temporaire après traitement
         os.remove(tmp_file_path)
+
+        # Effacer l'élément traité de uploaded_files
+        uploaded_files.remove(uploaded_file)
 
     # Mise à jour de la barre de progression et du message
     progress_bar.progress(1.0)
