@@ -31,7 +31,7 @@ def check_memory():
     memory_free_mb = virtual_mem.available / (1024 * 1024)
 
     st.write("Mémoire utilisée :", memory_used_mb, "MB")
-    st.write("Mémoire disponible :", memory_free_it memory_free_mb, "MB")
+    st.write("Mémoire disponible :", memory_free_mb, "MB")
 
     # Capture de la sortie de objgraph.show_most_common_types
     with contextlib.redirect_stdout(io.StringIO()) as f:
@@ -45,10 +45,12 @@ def check_memory():
 
     # Si nécessaire, montrer des backrefs ou des refs des objets, ajuster avec capture de stdout également
     # Exemple avec show_backrefs si vous souhaitez l'inclure
+    '''
     with contextlib.redirect_stdout(io.StringIO()) as f:
         objgraph.show_backrefs([some_object], max_depth=4, refcounts=True)
     backrefs_output = f.getvalue()
     st.text(backrefs_output)
+    '''
 
 
 
