@@ -106,7 +106,6 @@ def save_to_csv(data, file_name):
 
 
 # Fonction pour créer un fichier ZIP
-@st.experimental_fragment
 def create_zip_file(files_dict):
     zip_buffer = BytesIO()
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
