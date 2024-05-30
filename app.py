@@ -258,7 +258,7 @@ if mode == "Conversion de fichiers Access en CSV":
         status_text.empty()
         
     # Créer un bouton pour télécharger le fichier ZIP
-    if uploaded_files:
+    if uploaded_files is not None:
         st.button(
             label="Convertir les fichiers",
             on_click=convert_files(uploaded_files)
