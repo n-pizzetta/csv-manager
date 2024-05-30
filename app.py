@@ -179,6 +179,7 @@ mode = st.selectbox("Choisissez une option", ["Conversion de fichiers Access en 
 
 if mode == "Conversion de fichiers Access en CSV":
     st.header("Conversion de fichiers Access en CSV")
+    st.session_state = {}
 
     uploaded_files = None
     uploaded_files = st.file_uploader("Choisissez des fichiers .accdb en ne dépassant pas les 400MB", type="accdb", accept_multiple_files=True)
