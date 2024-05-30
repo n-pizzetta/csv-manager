@@ -218,6 +218,9 @@ if mode == "Conversion de fichiers Access en CSV":
         status_text = st.empty()
         total_files = len(uploaded_files)
 
+        # Initialiser un dictionnaire pour stocker les fichiers convertis
+        st.session_state.converted_files = {}
+
         for i, uploaded_file in enumerate(uploaded_files):
 
             file_name = uploaded_file.name.split('.')[0]
