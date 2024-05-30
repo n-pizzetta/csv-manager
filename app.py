@@ -6,6 +6,10 @@ import os
 import jpype
 import tempfile
 import zipfile
+import warnings
+
+# Ignorer les avertissements
+warnings.filterwarnings("ignore")
 
 
 ###########################
@@ -255,8 +259,10 @@ if mode == "Conversion de fichiers Access en CSV":
         
     # Créer un bouton pour télécharger le fichier ZIP
     if uploaded_files:
-        if st.button("Convertir les fichiers"):
+        convert_button = st.button("Convertir les fichiers")
+        if convert_button:
             convert_files(uploaded_files)
+            convert_button.empty()
 
 
             
