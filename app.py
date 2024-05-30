@@ -163,11 +163,11 @@ def start_jvm():
     del current_dir, classpath, ucanaccess_jars
 
 
-def convert_files(uploaded_file):
+def convert_files(uploaded_files):
 
     progress_bar = st.progress(0)
     status_text = st.empty()
-    total_files = len(uploaded_file)
+    total_files = len(uploaded_files)
 
     for i, uploaded_file in enumerate(uploaded_files):
         
