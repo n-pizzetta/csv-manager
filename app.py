@@ -39,7 +39,7 @@ def setup_java():
         return None
 
 # Fonction pour mettre à jour la barre de progression
-def update_progress(progress, i, total_files, progress_bar):
+def update_progress(progress):
     current_progress = (i + progress) / total_files
     progress_bar.progress(current_progress)
 
@@ -176,7 +176,7 @@ def convert_files(uploaded_file):
             tmp_file_path = tmp_file.name
 
         # Lire les données du fichier Access
-        data = read_access_file(tmp_file_path, ucanaccess_jars, update_progress(i, total_files, progress_bar), status_text)
+        data = read_access_file(tmp_file_path, ucanaccess_jars, update_progress, status_text)
         # Sauvegarder les résultats intermédiaires
         csv_data, file_name = save_to_csv(data, f"{uploaded_file.name.split('.')[0]}.csv")
         st.session_state.converted_files[file_name] = csv_data
