@@ -10,7 +10,7 @@ import warnings
 import psutil
 import objgraph
 import sys
-
+import gc
 
 # Ignorer les avertissements
 warnings.filterwarnings("ignore", module="jaydebeapi")
@@ -28,51 +28,23 @@ def check_memory():
     # Calculer la mémoire utilisée en Mo
     memory_used_mb = memory_info.rss / (1024 * 1024)
 
-    # Calculer la mémoire disponible en Mo
-    #memory_free_mb = memory_info.available / (1024 * 1024)
+    # Obtenir et calculer la mémoire disponible en Mo
+    virtual_mem = psutil.virtual_memory()
+    memory_free_mb = virtual_mem.available / (1024 * 1024)
 
     # Afficher les informations sur la mémoire dans Streamlit
     st.write("Mémoire utilisée :", memory_used_mb, "MB")
-    #st.write("Mémoire disponible :", memory_free_mb, "Mo")
-
-    # Tracer tous les objets en mémoire
-    objgraph.show_most_common_types(limit=None)
+    st.write("Mémoire disponible :", memory_free_mb, "MB")
 
     # Afficher la taille totale de tous les objets en mémoire
     total_size = sum(sys.getsizeof(x) for x in gc.get_objects())
-    st.write("Taille totale de tous les objets en mémoire :", total_size, "octets")
+    st.write("Taille totale de tous les objets en mémoire :", total  total_size, "octets")
 
     # Afficher les 10 variables les plus volumineuses en mémoire
-    objgraph.show_backrefs(objgraph.by_type("str")[0], max_depth=4, refcounts=True, filter=objgraph.is_proper_module)
-    st.write("Variables les plus volumineuses en mémoire :")
-    for var, size in sorted(((var, sys.getsizeof(eval(var))) for var in dir() if not var.startswith("__")), key=lambda x: -x[1])[:10]:
+    all_vars = {var: sys.getsizeof(eval(var)) for var in dir() if not var.startswith("__") and not var.endswith("__")}
+    for var, size in sorted(all_vars.items(), key=lambda x: -x[1])[:10]:
         st.write(f"{var:<30} : {size} octets")
 
-# Fonction pour configurer Java
-def setup_java():
-    # Ajouter des chemins communs pour OpenJDK 11
-    java_home_paths = [
-        '/usr/lib/jvm/java-11-openjdk-amd64',  # Chemin commun pour OpenJDK 11
-        '/usr/lib/jvm/default-java'  # Chemin alternatif pour default-java
-    ]
-    
-    # Vérifier et définir JAVA_HOME
-    for path in java_home_paths:
-        if os.path.exists(path):
-            os.environ['JAVA_HOME'] = path
-            break
-    
-    if 'JAVA_HOME' in os.environ:
-        jvm_path = os.path.join(os.environ['JAVA_HOME'], 'lib', 'server', 'libjvm.so')
-        if os.path.exists(jvm_path):
-            os.environ['PATH'] = f"{os.environ['JAVA_HOME']}/bin:" + os.environ['PATH']
-            return jvm_path
-        else:
-            st.error(f"libjvm.so not found in {jvm_path}.")
-            return None
-    else:
-        st.error("JAVA_HOME is not set.")
-        return None
 
 
 # Fonction pour lire un fichier Access et récupérer les données spécifiques
@@ -154,17 +126,14 @@ def create_zip_file(files_dict):
         on_click=update_key
     )
 
-
-def convert_files(uploaded_file):
+# Fonction pour démarrer la JVM
+@st.cache
+def start_jvm():
 
     # Obtenir le répertoire de travail courant
     current_dir = os.getcwd()
 
-    # Afficher le répertoire courant pour le débogage
-    #st.write(f"Current directory: {current_dir}")
-    #st.write(f"Fichiers présents dans le répertoire : {os.listdir(current_dir)}")
-
-    # Liste des fichiers JAR nécessaires pour UCanAccess
+    # Charger les fichiers JAR nécessaires
     ucanaccess_jars = [
         'ucanaccess-5.0.1.jar',
         os.path.join('loader', 'ucanload.jar'),
@@ -180,16 +149,21 @@ def convert_files(uploaded_file):
     # Afficher le classpath pour le débogage
     #st.write(f"Classpath: {classpath}")
 
-    if not jpype.isJVMStarted():
-        #st.write("Starting JVM...")
-        jpype.startJVM(
-            jpype.getDefaultJVMPath(),
-            *['-Xms512m', '-Xmx2048m'],     # Augmentationd de la mémoire allouée à la JVM
-            #classpath = "-Djava.class.path=" + classpath
-            classpath = classpath
-            )
-        #st.write(f"JVM started successfully")
-    
+    # Démarrer la JVM avec les fichiers JAR
+    jpype.startJVM(
+        jpype.getDefaultJVMPath(),
+        *['-Xms512m', '-Xmx2048m'],     # Augmentation de la mémoire allouée à la JVM
+        classpath = classpath
+    )
+
+    # Supprimer les variables une fois que la JVM est démarrée
+    del current_dir, classpath
+
+    return ucanaccess_jars
+
+
+def convert_files(uploaded_file, ucanaccess_jars):
+
     progress_bar = st.progress(0)
     status_text = st.empty()
     total_files = len(uploaded_files)
@@ -220,7 +194,7 @@ def convert_files(uploaded_file):
         os.remove(tmp_file_path)
 
         # Effacer l'élément traité de uploaded_files
-        uploaded_files.remove(uploaded_file)
+        uploaded_files = [file for file in uploaded_files if file != uploaded_file]  # Reconstruit la liste sans le fichier traité
 
     # Mise à jour de la barre de progression et du message
     progress_bar.progress(1.0)
@@ -230,6 +204,7 @@ def convert_files(uploaded_file):
     status_text.empty()
 
 # Fonction pour lire des fichiers CSV/Excel et les concaténter
+@st.cache
 def read_and_concat_files(uploaded_files):
     combined_data = pd.DataFrame()
     progress_bar = st.progress(0)
@@ -266,8 +241,9 @@ def read_and_concat_files(uploaded_files):
 ## Interface Streamlit ##
 #########################
 
-# Appeler la fonction pour s'assurer que Java est configuré
-#jvm_path = setup_java()
+
+if not jpype.isJVMStarted():
+    ucanaccess_jars = start_jvm()
 
 # Interface utilisateur Streamlit
 st.title("Application de conversion et concaténation de fichiers")
@@ -304,7 +280,7 @@ if mode == "Conversion de fichiers Access en CSV":
     elif uploaded_files and (st.session_state.button_clicked is False):
         if st.button("Convertir les fichiers"):
             st.session_state.button_clicked = True
-            convert_files(uploaded_files)
+            convert_files(uploaded_files, ucanaccess_jars)
             st.rerun()
 
         
