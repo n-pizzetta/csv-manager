@@ -121,6 +121,9 @@ def create_zip_file(files_dict):
 
 def convert_files(uploaded_file):
 
+    if 'converted_files' not in st.session_state:
+        st.session_state.converted_files = {}
+
     # Obtenir le répertoire de travail courant
     current_dir = os.getcwd()
 
@@ -161,9 +164,6 @@ def convert_files(uploaded_file):
     for i, uploaded_file in enumerate(uploaded_files):
 
         file_name = uploaded_file.name.split('.')[0]
-
-        if 'converted_files' not in st.session_state:
-            st.session_state.converted_files = {}
 
         # Créer un fichier temporaire pour l'upload
         with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
