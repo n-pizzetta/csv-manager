@@ -131,13 +131,14 @@ def create_zip_file(files_dict):
     zip_buffer.seek(0)
 
     # Créer un bouton pour télécharger le fichier ZIP
-    st.download_button(
+    if st.download_button(
         label="Télécharger tous les fichiers convertis",
         data=zip_buffer,
         file_name="converted_files.zip",
-        mime="application/zip",
-        on_click=update_key
-    )
+        mime="application/zip"
+    ):
+        update_key()
+        
 
 
 def convert_files(uploaded_file):
@@ -175,6 +176,9 @@ def convert_files(uploaded_file):
             )
         #st.write(f"JVM started successfully")
     
+    os.remove(current_dir)
+    os.remove(classpath)
+
     progress_bar = st.progress(0)
     status_text = st.empty()
     total_files = len(uploaded_files)
@@ -195,6 +199,7 @@ def convert_files(uploaded_file):
 
         # Lire les données du fichier Access
         data = read_access_file(tmp_file_path, ucanaccess_jars, update_progress, status_text)
+    
         # Sauvegarder les résultats intermédiaires
         csv_data, file_name = save_to_csv(data, f"{uploaded_file.name.split('.')[0]}.csv")
         st.session_state.converted_files[file_name] = csv_data
@@ -207,6 +212,8 @@ def convert_files(uploaded_file):
 
         # Effacer l'élément traité de uploaded_files
         uploaded_files.remove(uploaded_file)
+
+    os.remove(ucanaccess_jars)
 
     # Mise à jour de la barre de progression et du message
     progress_bar.progress(1.0)
@@ -241,6 +248,7 @@ def read_and_concat_files(uploaded_files):
     # Mise à jour du message après le traitement
     status_text.text("Processing complete!")
     progress_bar.empty()
+    status_text.empty()
 
     return combined_data
 
