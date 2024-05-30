@@ -175,7 +175,7 @@ def convert_files(uploaded_file):
             )
         #st.write(f"JVM started successfully")
     
-    os.remove(classpath)
+    del classpath
 
     progress_bar = st.progress(0)
     status_text = st.empty()
