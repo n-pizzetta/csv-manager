@@ -251,22 +251,21 @@ if mode == "Conversion de fichiers Access en CSV":
 
             # Créer un fichier ZIP contenant tous les fichiers CSV convertis
             create_zip_file(st.session_state.converted_files)
+
+            # Mise à jour de la barre de progression et du message
+            progress_bar.progress(1.0)
+            status_text.text("Converting complete!")
+
+            progress_bar.empty()
+            status_text.empty()
         
-        # Créer un bouton pour télécharger le fichier ZIP
-        st.download_button(
-            label="Convertir les fichiers",
-            data=uploaded_files,
-            file_name="converted_files.zip",
-            mime="application/zip",
-            on_click=convert_files
-            )
+    # Créer un bouton pour télécharger le fichier ZIP
+    st.bouton(
+        label="Convertir les fichiers",
+        on_click=convert_files(uploaded_files)
+        )
 
-        # Mise à jour de la barre de progression et du message
-        progress_bar.progress(1.0)
-        status_text.text("Converting complete!")
 
-        progress_bar.empty()
-        status_text.empty()
 
 
 
