@@ -167,7 +167,7 @@ def convert_files(uploaded_file):
 
     progress_bar = st.progress(0)
     status_text = st.empty()
-    total_files = len(uploaded_files)
+    total_files = len(uploaded_file)
 
     for i, uploaded_file in enumerate(uploaded_files):
         
