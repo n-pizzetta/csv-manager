@@ -183,7 +183,6 @@ if mode == "Conversion de fichiers Access en CSV":
     uploaded_files = None
     uploaded_files = st.file_uploader("Choisissez des fichiers .accdb en ne dépassant pas les 400MB", type="accdb", accept_multiple_files=True)
 
-    @st.experimental_fragment
     def convert_files(uploaded_file):
 
         if 'converted_files' not in st.session_state:
