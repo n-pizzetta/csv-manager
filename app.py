@@ -17,7 +17,7 @@ warnings.filterwarnings("ignore", module="jaydebeapi")
 ## Fonctions utilitaires ##
 ###########################
 
-def check_memory():
+def check_memory(msg):
     # Obtenir les informations sur la mémoire du processus Python
     process = psutil.Process()
     memory_info = process.memory_info()
@@ -29,6 +29,7 @@ def check_memory():
     #memory_free_mb = memory_info.available / (1024 * 1024)
 
     # Afficher les informations sur la mémoire dans Streamlit
+    st.write(msg)
     st.write("Mémoire utilisée :", memory_used_mb, "MB")
     #st.write("Mémoire disponible :", memory_free_mb, "Mo")
 
@@ -198,7 +199,8 @@ def convert_files(uploaded_file):
         csv_data, file_name = save_to_csv(data, f"{uploaded_file.name.split('.')[0]}.csv")
         st.session_state.converted_files[file_name] = csv_data
 
-        check_memory()
+        message = f"Etat mémoire après traitement du fichier {uploaded_file.name}"
+        check_memory(message)
 
         # Supprimer le fichier temporaire après traitement
         os.remove(tmp_file_path)
@@ -258,7 +260,8 @@ st.title("Application de conversion et concaténation de fichiers")
 
 # Choix du mode d'utilisation
 mode = st.selectbox("Choisissez une option", ["Conversion de fichiers Access en CSV", "Concaténation de fichiers CSV/Excel"])
-
+message = "Etat mémoire avant upload"
+check_memory(message)
 
 if mode == "Conversion de fichiers Access en CSV":
     st.header("Conversion de fichiers Access en CSV")
@@ -277,7 +280,8 @@ if mode == "Conversion de fichiers Access en CSV":
 
     uploaded_files = st.file_uploader("Choisissez des fichiers .accdb en ne dépassant pas les 400MB", type="accdb", accept_multiple_files=True, key=f"uploader_{st.session_state.uploader_key}")
     
-    check_memory()
+    message = "Etat mémoire après upload"
+    check_memory(message)
 
     # Créer un bouton pour télécharger le fichier ZIP
     if (st.session_state.converted_files != {}) and (st.session_state.button_clicked is True):
