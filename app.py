@@ -163,12 +163,12 @@ def convert_files(uploaded_file):
     status_text = st.empty()
     total_files = len(uploaded_files)
 
-    # Initialiser un dictionnaire pour stocker les fichiers convertis
-    st.session_state.converted_files = {}
-
     for i, uploaded_file in enumerate(uploaded_files):
 
         file_name = uploaded_file.name.split('.')[0]
+
+        if 'converted_files' not in st.session_state:
+            st.session_state['converted_files'] = {}
 
         # Créer un fichier temporaire pour l'upload
         with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
@@ -244,9 +244,6 @@ mode = st.selectbox("Choisissez une option", ["Conversion de fichiers Access en 
 if mode == "Conversion de fichiers Access en CSV":
     st.header("Conversion de fichiers Access en CSV")
     st.session_state = {}
-
-    if 'converted_files' not in st.session_state:
-        st.session_state['converted_files'] = {}
 
     uploaded_files = None
     uploaded_files = st.file_uploader("Choisissez des fichiers .accdb en ne dépassant pas les 400MB", type="accdb", accept_multiple_files=True)
