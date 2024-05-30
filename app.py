@@ -7,6 +7,7 @@ import jpype
 import tempfile
 import zipfile
 import warnings
+import psutil
 
 # Ignorer les avertissements
 warnings.filterwarnings("ignore", module="jaydebeapi")
@@ -15,6 +16,21 @@ warnings.filterwarnings("ignore", module="jaydebeapi")
 ###########################
 ## Fonctions utilitaires ##
 ###########################
+
+def check_memory():
+    # Obtenir les informations sur la mémoire du processus Python
+    process = psutil.Process()
+    memory_info = process.memory_info()
+
+    # Calculer la mémoire utilisée en Mo
+    memory_used_mb = memory_info.rss / (1024 * 1024)
+
+    # Calculer la mémoire disponible en Mo
+    memory_free_mb = memory_info.available / (1024 * 1024)
+
+    # Afficher les informations sur la mémoire dans Streamlit
+    st.write("Mémoire utilisée :", memory_used_mb, "Mo")
+    st.write("Mémoire disponible :", memory_free_mb, "Mo")
 
 # Fonction pour configurer Java
 def setup_java():
@@ -182,6 +198,8 @@ def convert_files(uploaded_file):
         csv_data, file_name = save_to_csv(data, f"{uploaded_file.name.split('.')[0]}.csv")
         st.session_state.converted_files[file_name] = csv_data
 
+        check_memory()
+
         # Supprimer le fichier temporaire après traitement
         os.remove(tmp_file_path)
 
@@ -255,7 +273,9 @@ if mode == "Conversion de fichiers Access en CSV":
         st.session_state.uploader_key += 1
 
     uploaded_files = st.file_uploader("Choisissez des fichiers .accdb en ne dépassant pas les 400MB", type="accdb", accept_multiple_files=True, key=f"uploader_{st.session_state.uploader_key}")
-        
+    
+    check_memory()
+
     # Créer un bouton pour télécharger le fichier ZIP
     if (st.session_state.converted_files != {}) and (st.session_state.button_clicked is True):
         st.session_state.button_clicked = False             # Réinitialiser le bouton cliqué
