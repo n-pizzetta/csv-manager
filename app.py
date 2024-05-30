@@ -39,13 +39,13 @@ def setup_java():
         return None
 
 # Fonction pour mettre à jour la barre de progression
-def update_progress(progress):
+def update_progress(progress, i, total_files, progress_bar):
     current_progress = (i + progress) / total_files
     progress_bar.progress(current_progress)
 
 
 # Fonction pour lire un fichier Access et récupérer les données spécifiques
-def read_access_file(db_path, ucanaccess_jars, progress_callback=None):
+def read_access_file(db_path, ucanaccess_jars, progress_callback=None, status_text=st.empty()):
     conn = None
     cursor = None
     data_frame = pd.DataFrame()
@@ -120,13 +120,8 @@ def create_zip_file(files_dict):
         label="Télécharger tous les fichiers convertis",
         data=zip_buffer,
         file_name="converted_files.zip",
-        mime="application/zip",
-        on_click=clear_converted_files
+        mime="application/zip"
     )
-
-def clear_converted_files():
-    st.session_state.converted_files = {}
-    st.rerun()
 
 
 
@@ -186,13 +181,6 @@ if mode == "Conversion de fichiers Access en CSV":
 
     def convert_files(uploaded_file):
 
-        if 'converted_files' not in st.session_state:
-            st.session_state.converted_files = {}
-        
-        # Vérifier et nettoyer les fichiers si de nouveaux fichiers sont uploadés avant téléchargement
-        if st.session_state.get('converted_files', {}):
-            clear_converted_files()
-
         # Obtenir le répertoire de travail courant
         current_dir = os.getcwd()
 
@@ -231,21 +219,22 @@ if mode == "Conversion de fichiers Access en CSV":
         total_files = len(uploaded_files)
 
         for i, uploaded_file in enumerate(uploaded_files):
+
             file_name = uploaded_file.name.split('.')[0]
-            if file_name not in st.session_state.converted_files:
-                # Créer un fichier temporaire pour l'upload
-                with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
-                    tmp_file.write(uploaded_file.getbuffer())
-                    tmp_file_path = tmp_file.name
 
-                # Lire les données du fichier Access
-                data = read_access_file(tmp_file_path, ucanaccess_jars, update_progress)
-                # Sauvegarder les résultats intermédiaires
-                csv_data, file_name = save_to_csv(data, f"{uploaded_file.name.split('.')[0]}.csv")
-                st.session_state.converted_files[file_name] = csv_data
+            # Créer un fichier temporaire pour l'upload
+            with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+                tmp_file.write(uploaded_file.getbuffer())
+                tmp_file_path = tmp_file.name
 
-                # Supprimer le fichier temporaire après traitement
-                os.remove(tmp_file_path)
+            # Lire les données du fichier Access
+            data = read_access_file(tmp_file_path, ucanaccess_jars, update_progress(i, total_files, progress_bar), status_text)
+            # Sauvegarder les résultats intermédiaires
+            csv_data, file_name = save_to_csv(data, f"{uploaded_file.name.split('.')[0]}.csv")
+            st.session_state.converted_files[file_name] = csv_data
+
+            # Supprimer le fichier temporaire après traitement
+            os.remove(tmp_file_path)
 
         # Créer un fichier ZIP contenant tous les fichiers CSV convertis
         create_zip_file(st.session_state.converted_files)
@@ -286,4 +275,4 @@ elif mode == "Concaténation de fichiers CSV/Excel":
 
         # Sauvegarder le fichier CSV final
         csv_data, final_file_name = save_to_csv(combined_data, "final_output.csv")
-        st.download_button(label="Télécharger le fichier CSV final", data=csv_data, file_name=final_file_name, mime="text/csv", on_click=clear_converted_files)
+        st.download_button(label="Télécharger le fichier CSV final", data=csv_data, file_name=final_file_name, mime="text/csv")
