@@ -9,7 +9,7 @@ import zipfile
 import warnings
 
 # Ignorer les avertissements
-warnings.filterwarnings("ignore")
+warnings.filterwarnings("ignore", module="jaydebeapi")
 
 
 ###########################
@@ -266,6 +266,7 @@ if mode == "Conversion de fichiers Access en CSV":
         if st.button("Convertir les fichiers"):
             st.session_state.button_clicked = True
             convert_files(uploaded_files)
+            st.rerun()
 
         
 
