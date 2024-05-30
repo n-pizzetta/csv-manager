@@ -14,9 +14,6 @@ import gc
 import io
 import contextlib
 
-# Ignorer les avertissements
-warnings.filterwarnings("ignore", module="jaydebeapi")
-
 
 ###########################
 ## Fonctions utilitaires ##
