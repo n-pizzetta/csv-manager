@@ -33,24 +33,9 @@ def check_memory():
     st.write("Mémoire utilisée :", memory_used_mb, "MB")
     st.write("Mémoire disponible :", memory_free_mb, "MB")
 
-    # Capture de la sortie de objgraph.show_most_common_types
-    with contextlib.redirect_stdout(io.StringIO()) as f:
-        objgraph.show_most_common_types(limit=None)
-    objgraph_output = f.getvalue()
-    st.text(objgraph_output)
-
     # Capture de la taille totale de tous les objets en mémoire
     total_size = sum(sys.getsizeof(x) for x in gc.get_objects())
     st.write("Taille totale de tous les objets en mémoire :", total_size, "octets")
-
-    # Si nécessaire, montrer des backrefs ou des refs des objets, ajuster avec capture de stdout également
-    # Exemple avec show_backrefs si vous souhaitez l'inclure
-    '''
-    with contextlib.redirect_stdout(io.StringIO()) as f:
-        objgraph.show_backrefs([some_object], max_depth=4, refcounts=True)
-    backrefs_output = f.getvalue()
-    st.text(backrefs_output)
-    '''
 
 
 
@@ -60,6 +45,16 @@ def read_access_file(db_path, ucanaccess_jars, progress_callback=None, status_te
     conn = None
     cursor = None
     data_frame = pd.DataFrame()
+
+        # Charger les fichiers JAR nécessaires
+    ucanaccess_jars = [
+        'ucanaccess-5.0.1.jar',
+        os.path.join('loader', 'ucanload.jar'),
+        os.path.join('lib', 'commons-lang3-3.8.1.jar'),
+        os.path.join('lib', 'commons-logging-1.2.jar'),
+        os.path.join('lib', 'hsqldb-2.5.0.jar'),
+        os.path.join('lib', 'jackcess-3.0.1.jar')
+    ]
 
     # Message initial
     status_text.text("Converting...")
@@ -165,12 +160,10 @@ def start_jvm():
     )
 
     # Supprimer les variables une fois que la JVM est démarrée
-    del current_dir, classpath
-
-    return ucanaccess_jars
+    del current_dir, classpath, ucanaccess_jars
 
 
-def convert_files(uploaded_file, ucanaccess_jars):
+def convert_files(uploaded_file):
 
     progress_bar = st.progress(0)
     status_text = st.empty()
@@ -191,7 +184,7 @@ def convert_files(uploaded_file, ucanaccess_jars):
             progress_bar.progress(current_progress)
 
         # Lire les données du fichier Access
-        data = read_access_file(tmp_file_path, ucanaccess_jars, update_progress, status_text)
+        data = read_access_file(tmp_file_path, update_progress, status_text)
         # Sauvegarder les résultats intermédiaires
         csv_data, file_name = save_to_csv(data, f"{uploaded_file.name.split('.')[0]}.csv")
         st.session_state.converted_files[file_name] = csv_data
@@ -288,7 +281,7 @@ if mode == "Conversion de fichiers Access en CSV":
     elif uploaded_files and (st.session_state.button_clicked is False):
         if st.button("Convertir les fichiers"):
             st.session_state.button_clicked = True
-            convert_files(uploaded_files, ucanaccess_jars)
+            convert_files(uploaded_files)
             st.rerun()
 
         
