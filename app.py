@@ -118,8 +118,7 @@ def create_zip_file(files_dict):
         label="Télécharger tous les fichiers convertis",
         data=zip_buffer,
         file_name="converted_files.zip",
-        mime="application/zip",
-        on_click=update_key,
+        mime="application/zip"
     )
 
 
@@ -235,8 +234,8 @@ def read_and_concat_files(uploaded_files):
 # Interface utilisateur Streamlit
 st.title("Application de conversion et concaténation de fichiers")
 
-st.cache_data.clear()
-st.cache_resource.clear()
+st.session_state.converted_files = {}
+st.session_state.button_clicked = False
 
 # Choix du mode d'utilisation
 mode = st.selectbox("Choisissez une option", ["Conversion de fichiers Access en CSV", "Concaténation de fichiers CSV/Excel"])
@@ -266,7 +265,7 @@ if mode == "Conversion de fichiers Access en CSV":
         st.session_state.converted_files = {}
 
     elif st.session_state.converted_files != {} and not st.session_state.button_clicked:
-        convert_button = st.button("Convertir les fichiers")
+        convert_button = st.button("Convertir les fichiers", on_click=update_key)
         if convert_button:
             st.session_state.button_clicked = True
             convert_files(uploaded_files)
