@@ -11,6 +11,8 @@ import psutil
 import objgraph
 import sys
 import gc
+import io
+import contextlib
 
 # Ignorer les avertissements
 warnings.filterwarnings("ignore", module="jaydebeapi")
@@ -20,30 +22,34 @@ warnings.filterwarnings("ignore", module="jaydebeapi")
 ## Fonctions utilitaires ##
 ###########################
 
+
 def check_memory():
-    # Obtenir les informations sur la mémoire du processus Python
     process = psutil.Process()
     memory_info = process.memory_info()
-
-    # Calculer la mémoire utilisée en Mo
     memory_used_mb = memory_info.rss / (1024 * 1024)
-
-    # Obtenir et calculer la mémoire disponible en Mo
     virtual_mem = psutil.virtual_memory()
     memory_free_mb = virtual_mem.available / (1024 * 1024)
 
-    # Afficher les informations sur la mémoire dans Streamlit
     st.write("Mémoire utilisée :", memory_used_mb, "MB")
-    st.write("Mémoire disponible :", memory_free_mb, "MB")
+    st.write("Mémoire disponible :", memory_free_it memory_free_mb, "MB")
 
-    # Afficher la taille totale de tous les objets en mémoire
+    # Capture de la sortie de objgraph.show_most_common_types
+    with contextlib.redirect_stdout(io.StringIO()) as f:
+        objgraph.show_most_common_types(limit=None)
+    objgraph_output = f.getvalue()
+    st.text(objgraph_output)
+
+    # Capture de la taille totale de tous les objets en mémoire
     total_size = sum(sys.getsizeof(x) for x in gc.get_objects())
-    st.write("Taille totale de tous les objets en mémoire :", total  total_size, "octets")
+    st.write("Taille totale de tous les objets en mémoire :", total_size, "octets")
 
-    # Afficher les 10 variables les plus volumineuses en mémoire
-    all_vars = {var: sys.getsizeof(eval(var)) for var in dir() if not var.startswith("__") and not var.endswith("__")}
-    for var, size in sorted(all_vars.items(), key=lambda x: -x[1])[:10]:
-        st.write(f"{var:<30} : {size} octets")
+    # Si nécessaire, montrer des backrefs ou des refs des objets, ajuster avec capture de stdout également
+    # Exemple avec show_backrefs si vous souhaitez l'inclure
+    with contextlib.redirect_stdout(io.StringIO()) as f:
+        objgraph.show_backrefs([some_object], max_depth=4, refcounts=True)
+    backrefs_output = f.getvalue()
+    st.text(backrefs_output)
+
 
 
 
