@@ -26,11 +26,11 @@ def check_memory():
     memory_used_mb = memory_info.rss / (1024 * 1024)
 
     # Calculer la mémoire disponible en Mo
-    memory_free_mb = memory_info.available / (1024 * 1024)
+    #memory_free_mb = memory_info.available / (1024 * 1024)
 
     # Afficher les informations sur la mémoire dans Streamlit
     st.write("Mémoire utilisée :", memory_used_mb, "Mo")
-    st.write("Mémoire disponible :", memory_free_mb, "Mo")
+    #st.write("Mémoire disponible :", memory_free_mb, "Mo")
 
 # Fonction pour configurer Java
 def setup_java():
