@@ -8,33 +8,55 @@ import tempfile
 import zipfile
 import warnings
 import psutil
-import objgraph
-import sys
-import gc
-import io
-import contextlib
+
+# Ignorer les avertissements
+warnings.filterwarnings("ignore", module="jaydebeapi")
 
 
 ###########################
 ## Fonctions utilitaires ##
 ###########################
 
-
 def check_memory():
+    # Obtenir les informations sur la mémoire du processus Python
     process = psutil.Process()
     memory_info = process.memory_info()
+
+    # Calculer la mémoire utilisée en Mo
     memory_used_mb = memory_info.rss / (1024 * 1024)
-    virtual_mem = psutil.virtual_memory()
-    memory_free_mb = virtual_mem.available / (1024 * 1024)
 
+    # Calculer la mémoire disponible en Mo
+    #memory_free_mb = memory_info.available / (1024 * 1024)
+
+    # Afficher les informations sur la mémoire dans Streamlit
     st.write("Mémoire utilisée :", memory_used_mb, "MB")
-    st.write("Mémoire disponible :", memory_free_mb, "MB")
+    #st.write("Mémoire disponible :", memory_free_mb, "Mo")
 
-    # Capture de la taille totale de tous les objets en mémoire
-    total_size = sum(sys.getsizeof(x) for x in gc.get_objects())
-    st.write("Taille totale de tous les objets en mémoire :", total_size, "octets")
-
-
+# Fonction pour configurer Java
+def setup_java():
+    # Ajouter des chemins communs pour OpenJDK 11
+    java_home_paths = [
+        '/usr/lib/jvm/java-11-openjdk-amd64',  # Chemin commun pour OpenJDK 11
+        '/usr/lib/jvm/default-java'  # Chemin alternatif pour default-java
+    ]
+    
+    # Vérifier et définir JAVA_HOME
+    for path in java_home_paths:
+        if os.path.exists(path):
+            os.environ['JAVA_HOME'] = path
+            break
+    
+    if 'JAVA_HOME' in os.environ:
+        jvm_path = os.path.join(os.environ['JAVA_HOME'], 'lib', 'server', 'libjvm.so')
+        if os.path.exists(jvm_path):
+            os.environ['PATH'] = f"{os.environ['JAVA_HOME']}/bin:" + os.environ['PATH']
+            return jvm_path
+        else:
+            st.error(f"libjvm.so not found in {jvm_path}.")
+            return None
+    else:
+        st.error("JAVA_HOME is not set.")
+        return None
 
 
 # Fonction pour lire un fichier Access et récupérer les données spécifiques
@@ -42,16 +64,6 @@ def read_access_file(db_path, ucanaccess_jars, progress_callback=None, status_te
     conn = None
     cursor = None
     data_frame = pd.DataFrame()
-
-        # Charger les fichiers JAR nécessaires
-    ucanaccess_jars = [
-        'ucanaccess-5.0.1.jar',
-        os.path.join('loader', 'ucanload.jar'),
-        os.path.join('lib', 'commons-lang3-3.8.1.jar'),
-        os.path.join('lib', 'commons-logging-1.2.jar'),
-        os.path.join('lib', 'hsqldb-2.5.0.jar'),
-        os.path.join('lib', 'jackcess-3.0.1.jar')
-    ]
 
     # Message initial
     status_text.text("Converting...")
@@ -126,14 +138,17 @@ def create_zip_file(files_dict):
         on_click=update_key
     )
 
-# Fonction pour démarrer la JVM
-@st.cache
-def start_jvm():
+
+def convert_files(uploaded_file):
 
     # Obtenir le répertoire de travail courant
     current_dir = os.getcwd()
 
-    # Charger les fichiers JAR nécessaires
+    # Afficher le répertoire courant pour le débogage
+    #st.write(f"Current directory: {current_dir}")
+    #st.write(f"Fichiers présents dans le répertoire : {os.listdir(current_dir)}")
+
+    # Liste des fichiers JAR nécessaires pour UCanAccess
     ucanaccess_jars = [
         'ucanaccess-5.0.1.jar',
         os.path.join('loader', 'ucanload.jar'),
@@ -149,19 +164,16 @@ def start_jvm():
     # Afficher le classpath pour le débogage
     #st.write(f"Classpath: {classpath}")
 
-    # Démarrer la JVM avec les fichiers JAR
-    jpype.startJVM(
-        jpype.getDefaultJVMPath(),
-        *['-Xms512m', '-Xmx2048m'],     # Augmentation de la mémoire allouée à la JVM
-        classpath = classpath
-    )
-
-    # Supprimer les variables une fois que la JVM est démarrée
-    del current_dir, classpath, ucanaccess_jars
-
-
-def convert_files(uploaded_files):
-
+    if not jpype.isJVMStarted():
+        #st.write("Starting JVM...")
+        jpype.startJVM(
+            jpype.getDefaultJVMPath(),
+            *['-Xms512m', '-Xmx2048m'],     # Augmentationd de la mémoire allouée à la JVM
+            #classpath = "-Djava.class.path=" + classpath
+            classpath = classpath
+            )
+        #st.write(f"JVM started successfully")
+    
     progress_bar = st.progress(0)
     status_text = st.empty()
     total_files = len(uploaded_files)
@@ -181,7 +193,7 @@ def convert_files(uploaded_files):
             progress_bar.progress(current_progress)
 
         # Lire les données du fichier Access
-        data = read_access_file(tmp_file_path, update_progress, status_text)
+        data = read_access_file(tmp_file_path, ucanaccess_jars, update_progress, status_text)
         # Sauvegarder les résultats intermédiaires
         csv_data, file_name = save_to_csv(data, f"{uploaded_file.name.split('.')[0]}.csv")
         st.session_state.converted_files[file_name] = csv_data
@@ -192,7 +204,7 @@ def convert_files(uploaded_files):
         os.remove(tmp_file_path)
 
         # Effacer l'élément traité de uploaded_files
-        uploaded_files = [file for file in uploaded_files if file != uploaded_file]  # Reconstruit la liste sans le fichier traité
+        uploaded_files.remove(uploaded_file)
 
     # Mise à jour de la barre de progression et du message
     progress_bar.progress(1.0)
@@ -202,7 +214,6 @@ def convert_files(uploaded_files):
     status_text.empty()
 
 # Fonction pour lire des fichiers CSV/Excel et les concaténter
-@st.cache
 def read_and_concat_files(uploaded_files):
     combined_data = pd.DataFrame()
     progress_bar = st.progress(0)
@@ -239,9 +250,8 @@ def read_and_concat_files(uploaded_files):
 ## Interface Streamlit ##
 #########################
 
-
-if not jpype.isJVMStarted():
-    ucanaccess_jars = start_jvm()
+# Appeler la fonction pour s'assurer que Java est configuré
+#jvm_path = setup_java()
 
 # Interface utilisateur Streamlit
 st.title("Application de conversion et concaténation de fichiers")
