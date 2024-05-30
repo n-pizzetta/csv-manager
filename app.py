@@ -234,9 +234,6 @@ def read_and_concat_files(uploaded_files):
 # Interface utilisateur Streamlit
 st.title("Application de conversion et concaténation de fichiers")
 
-st.session_state.converted_files = {}
-st.session_state.button_clicked = False
-
 # Choix du mode d'utilisation
 mode = st.selectbox("Choisissez une option", ["Conversion de fichiers Access en CSV", "Concaténation de fichiers CSV/Excel"])
 
@@ -264,7 +261,7 @@ if mode == "Conversion de fichiers Access en CSV":
         create_zip_file(st.session_state.converted_files)
         st.session_state.converted_files = {}
 
-    elif st.session_state.converted_files != {} and not st.session_state.button_clicked:
+    elif uploaded_files and not st.session_state.button_clicked:
         convert_button = st.button("Convertir les fichiers", on_click=update_key)
         if convert_button:
             st.session_state.button_clicked = True
