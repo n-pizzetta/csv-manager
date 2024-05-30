@@ -185,9 +185,6 @@ def convert_files(uploaded_file):
         # Supprimer le fichier temporaire après traitement
         os.remove(tmp_file_path)
 
-    # Créer un fichier ZIP contenant tous les fichiers CSV convertis
-    create_zip_file(st.session_state.converted_files)
-
     # Mise à jour de la barre de progression et du message
     progress_bar.progress(1.0)
     status_text.text("Converting complete!")
