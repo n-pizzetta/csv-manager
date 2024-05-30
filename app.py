@@ -254,6 +254,9 @@ if mode == "Conversion de fichiers Access en CSV":
 
     if 'converted_files' not in st.session_state:
         st.session_state.converted_files = {}
+    
+    if 'button_clicked' not in st.session_state:
+        st.session_state.button_clicked = False
 
     def update_key():
         st.session_state.uploader_key += 1
@@ -261,11 +264,13 @@ if mode == "Conversion de fichiers Access en CSV":
     uploaded_files = st.file_uploader("Choisissez des fichiers .accdb en ne dépassant pas les 400MB", type="accdb", accept_multiple_files=True, key=f"uploader_{st.session_state.uploader_key}")
         
     # Créer un bouton pour télécharger le fichier ZIP
-    if uploaded_files:
+    if uploaded_files and (st.session_state != {}) and not st.session_state.button_clicked:
         convert_button = st.button("Convertir les fichiers")
         if convert_button:
-            convert_button = False
+            st.session_state.button_clicked = True
             convert_files(uploaded_files)
+    else:
+        st.session_state.button_clicked = False # Réinitialiser le bouton
 
 
             
