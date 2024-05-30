@@ -185,85 +185,84 @@ if mode == "Conversion de fichiers Access en CSV":
 
     @st.experimental_fragment
     def convert_files(uploaded_file):
+
+        if 'converted_files' not in st.session_state:
+            st.session_state.converted_files = {}
         
-        if uploaded_files:
+        # Vérifier et nettoyer les fichiers si de nouveaux fichiers sont uploadés avant téléchargement
+        if st.session_state.get('converted_files', {}):
+            clear_converted_files()
 
-            if 'converted_files' not in st.session_state:
-                st.session_state.converted_files = {}
-            
-            # Vérifier et nettoyer les fichiers si de nouveaux fichiers sont uploadés avant téléchargement
-            if st.session_state.get('converted_files', {}):
-                clear_converted_files()
+        # Obtenir le répertoire de travail courant
+        current_dir = os.getcwd()
 
-            # Obtenir le répertoire de travail courant
-            current_dir = os.getcwd()
+        # Afficher le répertoire courant pour le débogage
+        #st.write(f"Current directory: {current_dir}")
+        #st.write(f"Fichiers présents dans le répertoire : {os.listdir(current_dir)}")
 
-            # Afficher le répertoire courant pour le débogage
-            #st.write(f"Current directory: {current_dir}")
-            #st.write(f"Fichiers présents dans le répertoire : {os.listdir(current_dir)}")
+        # Liste des fichiers JAR nécessaires pour UCanAccess
+        ucanaccess_jars = [
+            'ucanaccess-5.0.1.jar',
+            os.path.join('loader', 'ucanload.jar'),
+            os.path.join('lib', 'commons-lang3-3.8.1.jar'),
+            os.path.join('lib', 'commons-logging-1.2.jar'),
+            os.path.join('lib', 'hsqldb-2.5.0.jar'),
+            os.path.join('lib', 'jackcess-3.0.1.jar')
+        ]
 
-            # Liste des fichiers JAR nécessaires pour UCanAccess
-            ucanaccess_jars = [
-                'ucanaccess-5.0.1.jar',
-                os.path.join('loader', 'ucanload.jar'),
-                os.path.join('lib', 'commons-lang3-3.8.1.jar'),
-                os.path.join('lib', 'commons-logging-1.2.jar'),
-                os.path.join('lib', 'hsqldb-2.5.0.jar'),
-                os.path.join('lib', 'jackcess-3.0.1.jar')
-            ]
+        # Concaténer les chemins des fichiers JAR correctement
+        classpath = ":".join([os.path.join(current_dir, "UCanAccess-5.0.1.bin", jar) for jar in ucanaccess_jars])
 
-            # Concaténer les chemins des fichiers JAR correctement
-            classpath = ":".join([os.path.join(current_dir, "UCanAccess-5.0.1.bin", jar) for jar in ucanaccess_jars])
+        # Afficher le classpath pour le débogage
+        #st.write(f"Classpath: {classpath}")
 
-            # Afficher le classpath pour le débogage
-            #st.write(f"Classpath: {classpath}")
+        if not jpype.isJVMStarted():
+            #st.write("Starting JVM...")
+            jpype.startJVM(
+                jpype.getDefaultJVMPath(),
+                *['-Xms512m', '-Xmx2048m'],     # Augmentationd de la mémoire allouée à la JVM
+                #classpath = "-Djava.class.path=" + classpath
+                classpath = classpath
+                )
+            #st.write(f"JVM started successfully")
+        
+        progress_bar = st.progress(0)
+        status_text = st.empty()
+        total_files = len(uploaded_files)
 
-            if not jpype.isJVMStarted():
-                #st.write("Starting JVM...")
-                jpype.startJVM(
-                    jpype.getDefaultJVMPath(),
-                    *['-Xms512m', '-Xmx2048m'],     # Augmentationd de la mémoire allouée à la JVM
-                    #classpath = "-Djava.class.path=" + classpath
-                    classpath = classpath
-                    )
-                #st.write(f"JVM started successfully")
-            
-            progress_bar = st.progress(0)
-            status_text = st.empty()
-            total_files = len(uploaded_files)
+        for i, uploaded_file in enumerate(uploaded_files):
+            file_name = uploaded_file.name.split('.')[0]
+            if file_name not in st.session_state.converted_files:
+                # Créer un fichier temporaire pour l'upload
+                with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+                    tmp_file.write(uploaded_file.getbuffer())
+                    tmp_file_path = tmp_file.name
 
-            for i, uploaded_file in enumerate(uploaded_files):
-                file_name = uploaded_file.name.split('.')[0]
-                if file_name not in st.session_state.converted_files:
-                    # Créer un fichier temporaire pour l'upload
-                    with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
-                        tmp_file.write(uploaded_file.getbuffer())
-                        tmp_file_path = tmp_file.name
+                # Lire les données du fichier Access
+                data = read_access_file(tmp_file_path, ucanaccess_jars, update_progress)
+                # Sauvegarder les résultats intermédiaires
+                csv_data, file_name = save_to_csv(data, f"{uploaded_file.name.split('.')[0]}.csv")
+                st.session_state.converted_files[file_name] = csv_data
 
-                    # Lire les données du fichier Access
-                    data = read_access_file(tmp_file_path, ucanaccess_jars, update_progress)
-                    # Sauvegarder les résultats intermédiaires
-                    csv_data, file_name = save_to_csv(data, f"{uploaded_file.name.split('.')[0]}.csv")
-                    st.session_state.converted_files[file_name] = csv_data
+                # Supprimer le fichier temporaire après traitement
+                os.remove(tmp_file_path)
 
-                    # Supprimer le fichier temporaire après traitement
-                    os.remove(tmp_file_path)
+        # Créer un fichier ZIP contenant tous les fichiers CSV convertis
+        create_zip_file(st.session_state.converted_files)
 
-            # Créer un fichier ZIP contenant tous les fichiers CSV convertis
-            create_zip_file(st.session_state.converted_files)
+        # Mise à jour de la barre de progression et du message
+        progress_bar.progress(1.0)
+        status_text.text("Converting complete!")
 
-            # Mise à jour de la barre de progression et du message
-            progress_bar.progress(1.0)
-            status_text.text("Converting complete!")
-
-            progress_bar.empty()
-            status_text.empty()
+        progress_bar.empty()
+        status_text.empty()
         
     # Créer un bouton pour télécharger le fichier ZIP
-    st.button(
-        label="Convertir les fichiers",
-        on_click=convert_files(uploaded_files)
-        )
+    if uploaded_files:
+        st.button(
+            label="Convertir les fichiers",
+            on_click=convert_files(uploaded_files)
+            )
 
 
 
