@@ -239,6 +239,9 @@ def read_and_concat_files(uploaded_files):
 # Interface utilisateur Streamlit
 st.title("Application de conversion et concaténation de fichiers")
 
+st.cache_data.clear()
+st.cache_resource.clear()
+
 # Choix du mode d'utilisation
 mode = st.selectbox("Choisissez une option", ["Conversion de fichiers Access en CSV", "Concaténation de fichiers CSV/Excel"])
 
