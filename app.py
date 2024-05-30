@@ -8,6 +8,9 @@ import tempfile
 import zipfile
 import warnings
 import psutil
+import objgraph
+import sys
+
 
 # Ignorer les avertissements
 warnings.filterwarnings("ignore", module="jaydebeapi")
@@ -31,6 +34,19 @@ def check_memory():
     # Afficher les informations sur la mémoire dans Streamlit
     st.write("Mémoire utilisée :", memory_used_mb, "MB")
     #st.write("Mémoire disponible :", memory_free_mb, "Mo")
+
+    # Tracer tous les objets en mémoire
+    objgraph.show_most_common_types(limit=None)
+
+    # Afficher la taille totale de tous les objets en mémoire
+    total_size = sum(sys.getsizeof(x) for x in gc.get_objects())
+    st.write("Taille totale de tous les objets en mémoire :", total_size, "octets")
+
+    # Afficher les 10 variables les plus volumineuses en mémoire
+    objgraph.show_backrefs(objgraph.by_type("str")[0], max_depth=4, refcounts=True, filter=objgraph.is_proper_module)
+    st.write("Variables les plus volumineuses en mémoire :")
+    for var, size in sorted(((var, sys.getsizeof(eval(var))) for var in dir() if not var.startswith("__")), key=lambda x: -x[1])[:10]:
+        st.write(f"{var:<30} : {size} octets")
 
 # Fonction pour configurer Java
 def setup_java():
