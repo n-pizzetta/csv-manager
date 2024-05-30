@@ -268,7 +268,7 @@ if mode == "Conversion de fichiers Access en CSV":
         create_zip_file(st.session_state.converted_files)
         st.session_state.converted_files = {}
 
-    elif uploaded_files and (st.session_state.converted_files == {}) and not st.session_state.button_clicked:
+    elif st.session_state.converted_files != {} and not st.session_state.button_clicked:
         convert_button = st.button("Convertir les fichiers")
         if convert_button:
             st.session_state.button_clicked = True
