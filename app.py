@@ -263,8 +263,7 @@ if mode == "Conversion de fichiers Access en CSV":
         st.session_state.converted_files = {}
 
     elif uploaded_files and (st.session_state.button_clicked is False):
-        convert_button = st.button("Convertir les fichiers")
-        if convert_button:
+        if st.button("Convertir les fichiers"):
             st.session_state.button_clicked = True
             convert_files(uploaded_files)
 
