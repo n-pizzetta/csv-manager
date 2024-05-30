@@ -38,11 +38,6 @@ def setup_java():
         st.error("JAVA_HOME is not set.")
         return None
 
-# Fonction pour mettre à jour la barre de progression
-def update_progress(progress):
-    current_progress = (i + progress) / total_files
-    progress_bar.progress(current_progress)
-
 
 # Fonction pour lire un fichier Access et récupérer les données spécifiques
 def read_access_file(db_path, ucanaccess_jars, progress_callback=None, status_text=st.empty()):
@@ -168,12 +163,17 @@ def convert_files(uploaded_file):
         file_name = uploaded_file.name.split('.')[0]
 
         if 'converted_files' not in st.session_state:
-            st.session_state['converted_files'] = {}
+            st.session_state.converted_files = {}
 
         # Créer un fichier temporaire pour l'upload
         with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
             tmp_file.write(uploaded_file.getbuffer())
             tmp_file_path = tmp_file.name
+        
+        # Fonction pour mettre à jour la barre de progression
+        def update_progress(progress):
+            current_progress = (i + progress) / total_files
+            progress_bar.progress(current_progress)
 
         # Lire les données du fichier Access
         data = read_access_file(tmp_file_path, ucanaccess_jars, update_progress, status_text)
