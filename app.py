@@ -31,7 +31,6 @@ def check_memory(msg):
     # Afficher les informations sur la mémoire dans Streamlit
     st.write(msg)
     st.write("Mémoire utilisée :", memory_used_mb, "MB")
-    #st.write("Mémoire disponible :", memory_free_mb, "Mo")
 
 # Fonction pour configurer Java
 def setup_java():
@@ -176,7 +175,6 @@ def convert_files(uploaded_file):
             )
         #st.write(f"JVM started successfully")
     
-    os.remove(current_dir)
     os.remove(classpath)
 
     progress_bar = st.progress(0)
@@ -212,8 +210,6 @@ def convert_files(uploaded_file):
 
         # Effacer l'élément traité de uploaded_files
         uploaded_files.remove(uploaded_file)
-
-    os.remove(ucanaccess_jars)
 
     # Mise à jour de la barre de progression et du message
     progress_bar.progress(1.0)
