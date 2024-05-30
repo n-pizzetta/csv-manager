@@ -262,7 +262,7 @@ if mode == "Conversion de fichiers Access en CSV":
         convert_button = st.button("Convertir les fichiers")
         if convert_button:
             convert_files(uploaded_files)
-            convert_button.empty()
+            convert_button = False
 
 
             
