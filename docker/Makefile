@@ -1,10 +1,10 @@
 # Variables
 DOCKER_IMAGE_NAME = my-streamlit-app
-DOCKERFILE_PATH = docker/Dockerfile
+DOCKERFILE_PATH = Dockerfile
 
 # Cibles
 build:
-	docker build -t $(DOCKER_IMAGE_NAME) -f $(DOCKERFILE_PATH) .
+	docker build -t $(DOCKER_IMAGE_NAME) -f $(DOCKERFILE_PATH) ..
 
 run:
 	docker run -p 8501:8501 $(DOCKER_IMAGE_NAME)

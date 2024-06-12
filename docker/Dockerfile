@@ -1,21 +1,22 @@
-FROM python:3.9-slim
+# Utiliser une image de base avec OpenJDK 11 préinstallé
+FROM openjdk:11-jdk-slim
+
+# Installer les dépendances Python
+RUN apt-get update && \
+    apt-get install -y python3 python3-pip && \
+    apt-get clean
 
 # Définir le répertoire de travail
 WORKDIR /app
 
-COPY docker/requirements.txt .
+# Copier le fichier requirements.txt dans le conteneur
+COPY ../requirements.txt .
 
-# Installer les dépendances
-RUN pip install --no-cache-dir -r requirements.txt
+# Installer les dépendances Python
+RUN pip3 install --no-cache-dir -r requirements.txt
 
-# Installer Java pour UCanAccess
-RUN apt-get update && \
-    apt-get install -y openjdk-11-jdk && \
-    apt-get clean;
-
-# Définir les variables d'environnement Java
-ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
-ENV PATH=$JAVA_HOME/bin:$PATH
+# Copier le reste des fichiers de l'application
+COPY ../ .
 
 # Exposer le port utilisé par Streamlit
 EXPOSE 8501
