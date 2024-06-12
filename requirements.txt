@@ -1,0 +1,6 @@
+streamlit
+pandas
+jaydebeapi
+jpype1
+psutil
+objgraph
