@@ -3,7 +3,7 @@ FROM python:3.9-slim
 # Définir le répertoire de travail
 WORKDIR /app
 
-COPY requirements.txt .
+COPY docker/requirements.txt .
 
 # Installer les dépendances
 RUN pip install --no-cache-dir -r requirements.txt
