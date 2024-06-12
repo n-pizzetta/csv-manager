@@ -6,11 +6,8 @@ import os
 import jpype
 import tempfile
 import zipfile
-import warnings
 import psutil
-
-# Ignorer les avertissements
-warnings.filterwarnings("ignore", module="jaydebeapi")
+import dask.dataframe as dd
 
 
 ###########################
@@ -28,6 +25,7 @@ def check_memory(msg):
     # Afficher les informations sur la mémoire dans Streamlit
     st.write(msg)
     st.write("Mémoire utilisée :", memory_used_mb, "MB")
+
 
 # Fonction pour configurer Java
 def setup_java():
@@ -58,29 +56,20 @@ def setup_java():
 
 
 # Fonction pour lire un fichier Access et récupérer les données spécifiques
-def read_access_file(db_path, ucanaccess_jars, progress_callback=None, status_text=st.empty()):
+def read_access_file(db_path, ucanaccess_jars, chunk_size=10000):
     conn = None
     cursor = None
-    data_frame = pd.DataFrame()
-
-    # Message initial
-    status_text.text("Converting...")
+    data_frames = []
 
     try:
         # Définition de la chaine de connexion
         conn_string = f"jdbc:ucanaccess://{db_path}"
-
-        if progress_callback:
-            progress_callback(0.1)  # 10% du processus terminé (connexion définie)
 
         # Connexion à la base de données
         conn = jaydebeapi.connect("net.ucanaccess.jdbc.UcanaccessDriver", 
                                   conn_string, 
                                   [], 
                                   ucanaccess_jars[0])
-        
-        if progress_callback:
-            progress_callback(0.3)  # 30% du processus terminé (connexion établie)
 
         cursor = conn.cursor()
         
@@ -88,11 +77,16 @@ def read_access_file(db_path, ucanaccess_jars, progress_callback=None, status_te
         sql = "select Date_Jour_H_M_d, PDM, TV_corrige, TV_brut from Trafic_Minute"
 
         cursor.execute(sql)
-        results = cursor.fetchall()
-        data_frame = pd.DataFrame(results, columns=["Date_Jour_H_M_d", "PDM", "TV_corrige", "TV_brut"])
 
-        if progress_callback:
-            progress_callback(0.8)  # 80% du processus terminé (requête exécutée)
+        while True:
+            results = cursor.fetchmany(chunk_size)
+            if not results:
+                break
+            chunk_df = pd.DataFrame(results, columns=["Date_Jour_H_M_d", "PDM", "TV_corrige", "TV_brut"])
+            data_frames.append(chunk_df)
+        #results = cursor.fetchall()
+        data_frame = pd.concat(data_frames, ignore_index=True)
+
     
     except Exception as e:
         st.error(f"Error processing {db_path}: {str(e)}")
@@ -124,7 +118,7 @@ def create_zip_file(files_dict):
     zip_buffer = BytesIO()
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
         for file_name, file_data in files_dict.items():
-            zip_file.writestr(f"{file_name}.csv", file_data)
+            zip_file.writestr(file_name, file_data)
     zip_buffer.seek(0)
 
     # Créer un bouton pour télécharger le fichier ZIP
@@ -179,6 +173,9 @@ def convert_files(uploaded_file):
     status_text = st.empty()
     total_files = len(uploaded_files)
 
+    # Message initial
+    status_text.text("Converting...")
+
     for i, uploaded_file in enumerate(uploaded_files):
         
         file_name = uploaded_file.name.split('.')[0]
@@ -187,17 +184,15 @@ def convert_files(uploaded_file):
         with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
             tmp_file.write(uploaded_file.getbuffer())
             tmp_file_path = tmp_file.name
-        
-        # Fonction pour mettre à jour la barre de progression
-        def update_progress(progress):
-            current_progress = (i + progress) / total_files
-            progress_bar.progress(current_progress)
+
 
         # Lire les données du fichier Access
-        data = read_access_file(tmp_file_path, ucanaccess_jars, update_progress, status_text)
+        data = read_access_file(tmp_file_path, ucanaccess_jars)
+        ddf = dd.from_pandas(data, npartitions=4)  # Conversion de pandas à Dask DataFrame
+
     
         # Sauvegarder les résultats intermédiaires
-        csv_data, file_name = save_to_csv(data, f"{uploaded_file.name.split('.')[0]}.csv")
+        csv_data, file_name = save_to_csv(ddf.compute(), f"{uploaded_file.name.split('.')[0]}.csv")
         st.session_state.converted_files[file_name] = csv_data
 
         message = f"Etat mémoire après traitement du fichier {uploaded_file.name}"
@@ -206,8 +201,9 @@ def convert_files(uploaded_file):
         # Supprimer le fichier temporaire après traitement
         os.remove(tmp_file_path)
 
-        # Effacer l'élément traité de uploaded_files
-        uploaded_files.remove(uploaded_file)
+        current_progress = (i+1) / total_files
+        status_text.text(f"Converting... {current_progress*100:.2f}% complete")
+        progress_bar.progress(current_progress)
 
     # Mise à jour de la barre de progression et du message
     progress_bar.progress(1.0)
@@ -227,8 +223,6 @@ def read_and_concat_files(uploaded_files):
     status_text.text("Processing...")
 
     for i, uploaded_file in enumerate(uploaded_files):
-        current_progress = (i+1) / total_files
-        progress_bar.progress(current_progress)
 
         if uploaded_file.name.endswith('.csv'):
             data = pd.read_csv(uploaded_file)
@@ -238,9 +232,14 @@ def read_and_concat_files(uploaded_files):
             st.error(f"Unsupported file format: {uploaded_file.name}")
             continue
         combined_data = pd.concat([combined_data, data], ignore_index=True)
+
+        current_progress = (i+1) / total_files
+        progress_bar.progress(current_progress)
     
     # Mise à jour du message après le traitement
+    progress_bar.progress(1.0)
     status_text.text("Processing complete!")
+
     progress_bar.empty()
     status_text.empty()
 
@@ -264,6 +263,10 @@ st.title("Application de conversion et concaténation de fichiers")
 mode = st.selectbox("Choisissez une option", ["Conversion de fichiers Access en CSV", "Concaténation de fichiers CSV/Excel"])
 message = "Etat mémoire avant upload"
 check_memory(message)
+
+
+
+
 
 if mode == "Conversion de fichiers Access en CSV":
     st.header("Conversion de fichiers Access en CSV")
@@ -300,7 +303,6 @@ if mode == "Conversion de fichiers Access en CSV":
         
 
 
-            
 
 elif mode == "Concaténation de fichiers CSV/Excel":
     st.header("Concaténation de fichiers CSV/Excel")
@@ -310,7 +312,7 @@ elif mode == "Concaténation de fichiers CSV/Excel":
 
         combined_data = read_and_concat_files(uploaded_files)
         st.write("Données concaténées")
-        st.write(combined_data)
+        st.write(combined_data.head())
 
         # Sauvegarder le fichier CSV final
         csv_data, final_file_name = save_to_csv(combined_data, "final_output.csv")
