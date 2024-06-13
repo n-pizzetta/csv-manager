@@ -16,18 +16,6 @@ logging.basicConfig(level=logging.INFO)
 ## Fonctions utilitaires ##
 ###########################
 
-def check_memory(msg):
-    # Obtenir les informations sur la mémoire du processus Python
-    process = psutil.Process()
-    memory_info = process.memory_info()
-
-    # Calculer la mémoire utilisée en Mo
-    memory_used_mb = memory_info.rss / (1024 * 1024)
-
-    # Afficher les informations sur la mémoire dans Streamlit
-    st.write(msg)
-    st.write("Mémoire utilisée :", memory_used_mb, "MB")
-
 
 # Fonction pour configurer Java
 def setup_java():
@@ -202,9 +190,6 @@ def convert_files(uploaded_file):
         del csv_data
         del file_name
 
-        message = f"Etat mémoire après traitement du fichier {uploaded_file.name}"
-        check_memory(message)
-
         # Supprimer le fichier temporaire après traitement
         os.remove(tmp_file_path)
 
@@ -269,8 +254,6 @@ st.title("Application de conversion et concaténation de fichiers")
 
 # Choix du mode d'utilisation
 mode = st.selectbox("Choisissez une option", ["Conversion de fichiers Access en CSV", "Concaténation de fichiers CSV/Excel"])
-message = "Etat mémoire avant upload"
-check_memory(message)
 
 
 
@@ -292,9 +275,6 @@ if mode == "Conversion de fichiers Access en CSV":
         st.session_state.uploader_key += 1
 
     uploaded_files = st.file_uploader("Choisissez des fichiers .accdb en ne dépassant pas les 400MB", type="accdb", accept_multiple_files=True, key=f"uploader_{st.session_state.uploader_key}")
-    
-    message = "Etat mémoire après upload"
-    check_memory(message)
 
     # Créer un bouton pour télécharger le fichier ZIP
     if (st.session_state.converted_files != {}) and (st.session_state.button_clicked is True):
