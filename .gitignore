@@ -3,3 +3,4 @@
 *.accdb
 *.csv
 *.xlsx
+docker/docker-compose.yml

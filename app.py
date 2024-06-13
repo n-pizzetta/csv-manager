@@ -8,7 +8,9 @@ import tempfile
 import zipfile
 import psutil
 import dask.dataframe as dd
+import logging
 
+logging.basicConfig(level=logging.INFO)
 
 ###########################
 ## Fonctions utilitaires ##
@@ -95,13 +97,17 @@ def read_access_file(db_path, ucanaccess_jars, chunk_size=10000):
         if cursor:
             try:
                 cursor.close()
+                del cursor
             except Exception as e:
                 st.error(f"Failed to close cursor for {db_path}: {str(e)}")
+                logging.error(f"Failed to close cursor for {db_path}: {str(e)}")
         if conn:
             try:
                 conn.close()
+                del conn
             except Exception as e:
                 st.error(f"Failed to close connection for {db_path}: {str(e)}")
+                logging.error(f"Failed to close connection for {db_path}: {str(e)}")
     
     return data_frame
 
@@ -161,7 +167,7 @@ def convert_files(uploaded_file):
         #st.write("Starting JVM...")
         jpype.startJVM(
             jpype.getDefaultJVMPath(),
-            *['-Xms512m', '-Xmx2048m'],     # Augmentationd de la mémoire allouée à la JVM
+            *['-Xms512m', '-Xmx2048m'],     # Augmentation de la mémoire allouée à la JVM
             #classpath = "-Djava.class.path=" + classpath
             classpath = classpath
             )
@@ -178,8 +184,6 @@ def convert_files(uploaded_file):
 
     for i, uploaded_file in enumerate(uploaded_files):
         
-        file_name = uploaded_file.name.split('.')[0]
-
         # Créer un fichier temporaire pour l'upload
         with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
             tmp_file.write(uploaded_file.getbuffer())
@@ -189,11 +193,14 @@ def convert_files(uploaded_file):
         # Lire les données du fichier Access
         data = read_access_file(tmp_file_path, ucanaccess_jars)
         ddf = dd.from_pandas(data, npartitions=4)  # Conversion de pandas à Dask DataFrame
+        del ucanaccess_jars
 
     
         # Sauvegarder les résultats intermédiaires
         csv_data, file_name = save_to_csv(ddf.compute(), f"{uploaded_file.name.split('.')[0]}.csv")
         st.session_state.converted_files[file_name] = csv_data
+        del csv_data
+        del file_name
 
         message = f"Etat mémoire après traitement du fichier {uploaded_file.name}"
         check_memory(message)
@@ -201,9 +208,9 @@ def convert_files(uploaded_file):
         # Supprimer le fichier temporaire après traitement
         os.remove(tmp_file_path)
 
-        current_progress = (i+1) / total_files
-        status_text.text(f"Converting... {current_progress*100:.2f}% complete")
-        progress_bar.progress(current_progress)
+        current_progress = i + 1
+        status_text.text(f"Converting... ({current_progress}/{total_files})")
+        progress_bar.progress(current_progress/total_files)
 
     # Mise à jour de la barre de progression et du message
     progress_bar.progress(1.0)
@@ -234,6 +241,7 @@ def read_and_concat_files(uploaded_files):
         combined_data = pd.concat([combined_data, data], ignore_index=True)
 
         current_progress = (i+1) / total_files
+        status_text.text(f"Processing... {current_progress*100:.2f}%")
         progress_bar.progress(current_progress)
     
     # Mise à jour du message après le traitement

@@ -1,16 +1,33 @@
 # Variables
-DOCKER_IMAGE_NAME = my-streamlit-app
+DOCKER_IMAGE_NAME = csv-manager
 DOCKERFILE_PATH = Dockerfile
+PROJECT_DIRECTORY = $(shell pwd)
+NAME = csv-manager
+TAG = latest
 
 # Cibles
+start:
+	
+
 build:
-	docker build -t $(DOCKER_IMAGE_NAME) -f $(DOCKERFILE_PATH) ..
+	docker build -t ${NAME}:${TAG} -f ${DOCKERFILE_PATH} ..
 
 run:
-	docker run -p 8501:8501 $(DOCKER_IMAGE_NAME)
+	docker run -it \
+		--name ${DOCKER_IMAGE_NAME} \
+		-v ${PROJECT_DIRECTORY}:/app \
+		-d --restart=always \
+		-p 8501:8501 \
+		--memory=3.5g \
+		--cpus=4 \
+		--log-opt max-size=10m \
+		--log-opt max-file=3 \
+		${NAME}:${TAG}
+
 
 stop:
-	docker stop $(shell docker ps -q --filter ancestor=$(DOCKER_IMAGE_NAME))
+	docker stop ${DOCKER_IMAGE_NAME}
+	docker rm ${DOCKER_IMAGE_NAME}
 
 clean:
-	docker rmi $(DOCKER_IMAGE_NAME)
+	docker rmi ${NAME}:${TAG}

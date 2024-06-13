@@ -3,4 +3,4 @@ pandas
 jaydebeapi
 jpype1
 psutil
-objgraph
+dask[dataframe]

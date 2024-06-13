@@ -1,30 +1,100 @@
-# My Streamlit App
+# CSV Manager
 
-Cette application Streamlit permet de convertir des fichiers Access en CSV et de concaténer des fichiers CSV/Excel.
+CSV Manager is an application for converting Access database files to CSV and for concatenating multiple CSV/Excel files. This README provides instructions for installing and using the application for both novice and advanced users.
 
-## Comment utiliser l'application
+## Prerequisites
 
-Vous pouvez accéder à l'application via l'URL suivante :
+- Docker Desktop: [Download Docker](https://www.docker.com/products/docker-desktop)
 
-[CIAO ACCESS!!!](https://appli-ecologie-logistique-waycz7sxxs8uxwxal5phk9.streamlit.app)
+## Application Features
 
-### Fonctionnalités
+1. Upload your Access files to convert them into CSV.
+2. Upload you CSV/Excel files to concatenate them into one CSV.
+   
+## Installation and Usage
 
-1. **Conversion de fichiers Access en CSV**
-   - Téléchargez vos fichiers Access (.accdb) pour les convertir en fichiers CSV.
+### For Users Not Familiar with GitHub and Terminal
 
-2. **Concaténation de fichiers CSV/Excel**
-   - Téléchargez vos fichiers CSV ou Excel pour les concaténer en un seul fichier CSV.
+1. **Download the Application**
 
-## Prérequis
+   Download and extract the provided ZIP file.
 
-- Aucune installation de logiciel n'est nécessaire. Accédez simplement à l'URL ci-dessus via un navigateur web.
+2. **Install Docker Desktop**
 
-## Instructions
+   If not already installed, download and install Docker Desktop from [Docker](https://www.docker.com/products/docker-desktop). Follow the installation instructions for your operating system.
 
-1. Ouvrez le lien de l'application dans votre navigateur.
-2. Choisissez l'option souhaitée : Conversion de fichiers Access en CSV ou Concaténation de fichiers CSV/Excel.
-3. Téléchargez les fichiers nécessaires en utilisant l'interface de l'application.
-4. Suivez les instructions à l'écran pour traiter les fichiers et télécharger les résultats.
+3. **Run the Application**
 
-Pour toute question ou assistance, veuillez contacter [mon mail](mailto:nathan.pizzetta@gmail.com).
+   - For **Windows** users:
+     1. Go to the docker directory in the extracted directory.
+     2. Double-click the `start.bat` file.
+     3. Open a web browser and navigate to `http://localhost:8501` to access the application. (or click on this link: [CIAO ACCESS!!!!](https://localhost:8501))
+
+   - For **macOS/Linux** users:
+     1. Open the Terminal application.
+     2. Navigate to the extracted directory using the `cd` command. For example:
+        ```sh
+        cd ~/Downloads/csv-manager
+        ```
+     3. Make the `start.sh` script executable (if not done already):
+        ```sh
+        chmod +x start.sh
+        ```
+     4. Execute the script:
+        ```sh
+        ./start.sh
+        ```
+     5. Open a web browser and navigate to `http://localhost:8501` to access the application. (or click on this link: [CIAO ACCESS!!!!](https://localhost:8501))
+
+### For Users Familiar with GitHub and Terminal
+
+1. **Clone the Repository**
+
+   Clone this repository to your local machine:
+
+   ```bash
+   git clone https://github.com/n-pizzetta/csv-manager.git
+   cd csv-manager/docker
+   ```
+
+2. **Using the Makefile**
+
+   - **Build the Docker Image**:
+     ```bash
+     make build
+     ```
+
+   - **Run the Docker Container**:
+     ```bash
+     make run
+     ```
+
+   - **Access the Application**:
+     Open a web browser and navigate to `http://localhost:8501`.
+
+   - **Stop the Docker Container**:
+     ```bash
+     make stop
+     ```
+
+   - **Clean Up Docker Images**:
+     ```bash
+     make clean
+     ```
+
+## Troubleshooting
+
+If you encounter issues with running the application or resource monitoring tools, ensure that:
+- Docker Desktop is running.
+- The correct permissions are set for mounted volumes.
+- The Docker container has sufficient memory and CPU resources allocated.
+
+For further assistance, please refer to the Docker documentation or contact the project maintainers.
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](MIT-LICENSE.txt) file for details.
+
+---
+
+Thank you for using CSV Manager! If you have any questions or feedback, please contact me by [email](mailto:nathan.pizzetta@gmail.com).
