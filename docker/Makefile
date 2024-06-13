@@ -6,9 +6,6 @@ NAME = csv-manager
 TAG = latest
 
 # Cibles
-start:
-	
-
 build:
 	docker build -t ${NAME}:${TAG} -f ${DOCKERFILE_PATH} ..
 

@@ -170,32 +170,36 @@ def convert_files(uploaded_file):
     # Message initial
     status_text.text("Converting...")
 
-    for i, uploaded_file in enumerate(uploaded_files):
-        
-        # Créer un fichier temporaire pour l'upload
+    i = 0
+
+    while uploaded_files:
+        uploaded_file = uploaded_files.pop(0)
+        file_name = uploaded_file.name.split('.')[0]
+
         with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
             tmp_file.write(uploaded_file.getbuffer())
             tmp_file_path = tmp_file.name
 
-
-        # Lire les données du fichier Access
-        data = read_access_file(tmp_file_path, ucanaccess_jars)
-        ddf = dd.from_pandas(data, npartitions=4)  # Conversion de pandas à Dask DataFrame
-        del ucanaccess_jars
+        try:
+            data = read_access_file(tmp_file_path, ucanaccess_jars)
+            ddf = dd.from_pandas(data, npartitions=4)
+            csv_data, file_name = save_to_csv(ddf.compute(), f"{uploaded_file.name.split('.')[0]}.csv")
+            st.session_state.converted_files[file_name] = csv_data
+            del csv_data
+            del file_name
+        except Exception as e:
+            st.error(f"Failed to process {uploaded_file.name}: {str(e)}")
+        finally:
+            if os.path.exists(tmp_file_path):
+                os.remove(tmp_file_path)
+            
+            current_progress = i + 1
+            status_text.text(f"Converting... ({current_progress}/{total_files})")
+            progress_bar.progress(current_progress/total_files)
+            i += 1
 
     
-        # Sauvegarder les résultats intermédiaires
-        csv_data, file_name = save_to_csv(ddf.compute(), f"{uploaded_file.name.split('.')[0]}.csv")
-        st.session_state.converted_files[file_name] = csv_data
-        del csv_data
-        del file_name
-
-        # Supprimer le fichier temporaire après traitement
-        os.remove(tmp_file_path)
-
-        current_progress = i + 1
-        status_text.text(f"Converting... ({current_progress}/{total_files})")
-        progress_bar.progress(current_progress/total_files)
+    del ucanaccess_jars
 
     # Mise à jour de la barre de progression et du message
     progress_bar.progress(1.0)
@@ -274,7 +278,7 @@ if mode == "Conversion de fichiers Access en CSV":
     def update_key():
         st.session_state.uploader_key += 1
 
-    uploaded_files = st.file_uploader("Choisissez des fichiers .accdb en ne dépassant pas les 400MB", type="accdb", accept_multiple_files=True, key=f"uploader_{st.session_state.uploader_key}")
+    uploaded_files = st.file_uploader("Choisissez des fichiers .accdb", type="accdb", accept_multiple_files=True, key=f"uploader_{st.session_state.uploader_key}")
 
     # Créer un bouton pour télécharger le fichier ZIP
     if (st.session_state.converted_files != {}) and (st.session_state.button_clicked is True):

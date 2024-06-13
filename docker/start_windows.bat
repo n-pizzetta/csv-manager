@@ -7,6 +7,9 @@ set PROJECT_DIRECTORY=%cd%
 set NAME=csv-manager
 set TAG=latest
 
+rem Se déplcaer dans le répertoire du script
+cd %~dp0..
+
 rem Construire l'image Docker
 docker build -t %NAME%:%TAG% -f Dockerfile ..
 
