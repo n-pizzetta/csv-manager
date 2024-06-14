@@ -16,7 +16,7 @@ Upload your Access files to convert them into CSV.
 
 1. **Download the Application**
 
-   Download and extract the provided ZIP file.
+   Download and extract the [provided ZIP file](csv-manager.zip).
 
 2. **Install Docker Desktop**
 

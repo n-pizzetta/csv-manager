@@ -115,6 +115,9 @@ def save_to_csv(data, file_name):
     data.to_csv(output, index=False)
     return output.getvalue(), file_name
 
+def update_key():
+    st.session_state.uploader_key += 1
+
 def create_zip_file(files_dict):
     zip_buffer = BytesIO()
     try:
@@ -128,6 +131,7 @@ def create_zip_file(files_dict):
             file_name="converted_files.zip",
             mime="application/zip"
             ):
+            update_key()
             st.session_state.button_download_clicked = True
             st.session_state.uploaded_files = None
             st.session_state.converted_files = {}
@@ -214,7 +218,7 @@ if 'button_download_clicked' not in st.session_state:
 
 
 
-st.session_state.uploaded_files = st.file_uploader("Choose .accdb files", type="accdb", accept_multiple_files=True)
+st.session_state.uploaded_files = st.file_uploader("Choose .accdb files", type="accdb", accept_multiple_files=True, key=f"uploader_{st.session_state.uploader_key}")
 
 if st.session_state.uploaded_files and not st.session_state.meta_data and (st.session_state.button_download_clicked is False):
     
