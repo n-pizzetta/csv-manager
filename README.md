@@ -2,6 +2,14 @@
 
 CSV Manager is an application for converting Access database files to CSV. This README provides instructions for installing and using the application for both novice and advanced users.
 
+<p align="center">
+  <video width=70% controls>
+    <source src="./example2.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+</p>
+
+
 ## Prerequisites
 
 - Docker Desktop: [Download Docker](https://www.docker.com/products/docker-desktop)
