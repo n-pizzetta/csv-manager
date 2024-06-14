@@ -138,7 +138,6 @@ def create_zip_file(files_dict):
             st.session_state.meta_data = {}
             st.session_state.button_download_clicked = True
             gc.collect()
-            st.rerun()
 
     except Exception as e:
         st.error(f"Failed to create zip file: {str(e)}")
@@ -259,3 +258,5 @@ if st.session_state.meta_data and (st.session_state.button_convert_clicked is Fa
 if st.session_state.converted_files and (st.session_state.button_convert_clicked is True):
     st.session_state.button_convert_clicked = False
     create_zip_file(st.session_state.converted_files)
+
+st.button("Reset", on_click=lambda: st.session_state.clear())
