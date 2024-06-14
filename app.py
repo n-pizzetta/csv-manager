@@ -134,10 +134,7 @@ def create_zip_file(files_dict):
             ):
             update_key()
             st.session_state.button_download_clicked = True
-            st.session_state.uploaded_files = None
             st.session_state.converted_files = {}
-            st.session_state.meta_data = {}
-            st.session_state.button_download_clicked = True
             gc.collect()
 
     except Exception as e:
@@ -178,8 +175,7 @@ def convert_files(uploaded_files, table_name, selected_columns, ucanaccess_jars)
 
     progress_bar.progress(1.0)
     status_text.text("Converting complete!")
-    progress_bar.empty()
-    status_text.empty()
+
 
 
 #########################
@@ -197,9 +193,6 @@ ucanaccess_jars = [
         os.path.join('lib', 'hsqldb-2.5.0.jar'),
         os.path.join('lib', 'jackcess-3.0.1.jar')
     ]
-
-if "uploaded_files" not in st.session_state:
-    st.session_state.uploaded_files = None
 
 if "uploader_key" not in st.session_state:
     st.session_state.uploader_key = 0
