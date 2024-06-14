@@ -11,9 +11,9 @@ import gc
 
 logging.basicConfig(level=logging.INFO)
 
-###########################
+#######################
 ## Utility Functions ##
-###########################
+#######################
 
 def get_metadata(db_path, ucanaccess_jars):
     conn = None
