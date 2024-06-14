@@ -27,6 +27,7 @@ def get_metadata(db_path, ucanaccess_jars):
                                     conn_string, 
                                     [], 
                                     ucanaccess_jars[0])
+            st.write("Connection successful!")
             meta = conn.jconn.getMetaData()
             rs = meta.getTables(None, None, "%", ["TABLE"])
 
@@ -219,6 +220,8 @@ if 'button_download_clicked' not in st.session_state:
 
 st.session_state.uploaded_files = st.file_uploader("Choose .accdb files", type="accdb", accept_multiple_files=True, key=f"uploader_{st.session_state.uploader_key}")
 
+st.button("Reset", on_click=lambda: st.session_state.clear())
+
 if st.session_state.uploaded_files and not st.session_state.meta_data and (st.session_state.button_download_clicked is False):
     
     if not jpype.isJVMStarted():
@@ -258,5 +261,3 @@ if st.session_state.meta_data and (st.session_state.button_convert_clicked is Fa
 if st.session_state.converted_files and (st.session_state.button_convert_clicked is True):
     st.session_state.button_convert_clicked = False
     create_zip_file(st.session_state.converted_files)
-
-st.button("Reset", on_click=lambda: st.session_state.clear())
