@@ -1,6 +1,6 @@
 # CSV Manager
 
-CSV Manager is an application for converting Access database files to CSV and for concatenating multiple CSV/Excel files. This README provides instructions for installing and using the application for both novice and advanced users.
+CSV Manager is an application for converting Access database files to CSV. This README provides instructions for installing and using the application for both novice and advanced users.
 
 ## Prerequisites
 
@@ -8,9 +8,8 @@ CSV Manager is an application for converting Access database files to CSV and fo
 
 ## Application Features
 
-1. Upload your Access files to convert them into CSV.
-2. Upload you CSV/Excel files to concatenate them into one CSV.
-   
+Upload your Access files to convert them into CSV.
+
 ## Installation and Usage
 
 ### For Users Not Familiar with GitHub and Terminal
@@ -34,7 +33,7 @@ CSV Manager is an application for converting Access database files to CSV and fo
      1. Open the Terminal application.
      2. Navigate to the extracted directory using the `cd` command. For example:
         ```sh
-        cd ~/Downloads/csv-manager
+        cd ~/Downloads/csv-manager/docker
         ```
      3. Make the `start.sh` script executable (if not done already):
         ```sh
@@ -80,6 +79,11 @@ CSV Manager is an application for converting Access database files to CSV and fo
    - **Clean Up Docker Images**:
      ```bash
      make clean
+     ```
+   
+   - **Restart the Application**:
+     ```bash
+     make restart
      ```
 
 ## Troubleshooting

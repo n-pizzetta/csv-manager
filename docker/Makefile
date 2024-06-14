@@ -28,3 +28,5 @@ stop:
 
 clean:
 	docker rmi ${NAME}:${TAG}
+
+restart: stop clean build run
