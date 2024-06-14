@@ -4,7 +4,7 @@ CSV Manager is an application for converting Access database files to CSV. This 
 
 <p align="center">
   <video width=70% controls>
-    <source src="./example2.mp4" type="video/mp4">
+    <source src="./asset/example2.mp4" type="video/mp4">
     Your browser does not support the video tag.
   </video>
 </p>
