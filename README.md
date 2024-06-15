@@ -3,7 +3,7 @@
 CSV Manager is an application for converting Access database files to CSV. This README provides instructions for installing and using the application for both novice and advanced users.
 
 <p align="center">
-  <img src="./assets/example2.gif" width=70%>
+  <img src="./assets/example2.gif" width=100%>
 </p>
 
 
