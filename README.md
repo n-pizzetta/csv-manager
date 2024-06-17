@@ -32,7 +32,7 @@ Upload your Access files to convert them into CSV.
    - For **Windows** users:
      1. Go to the docker directory in the extracted directory.
      2. Double-click the `start_windows.bat` file.
-     3. Open a web browser and navigate to `http://localhost:8501` to access the application. (or click on this link: [CIAO ACCESS!!!!](https://localhost:8501))
+     3. Open a web browser and navigate to `http://localhost:8501` to access the application. (or click on this link: [CIAO ACCESS!!!!](http://localhost:8501))
 
    - For **macOS/Linux** users:
      1. Open the Terminal application.
@@ -49,7 +49,7 @@ Upload your Access files to convert them into CSV.
         ```sh
         ./start_os.sh
         ```
-     5. Open a web browser and navigate to `http://localhost:8501` to access the application. (or click on this link: [CIAO ACCESS!!!!](https://localhost:8501))
+     5. Open a web browser and navigate to `http://localhost:8501` to access the application. (or click on this link: [CIAO ACCESS!!!!](http://localhost:8501))
 
 ### For Users Familiar with GitHub and Terminal
 
