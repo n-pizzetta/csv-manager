@@ -31,7 +31,7 @@ Upload your Access files to convert them into CSV.
 
    - For **Windows** users:
      1. Go to the docker directory in the extracted directory.
-     2. Double-click the `start.bat` file.
+     2. Double-click the `start_windows.bat` file.
      3. Open a web browser and navigate to `http://localhost:8501` to access the application. (or click on this link: [CIAO ACCESS!!!!](https://localhost:8501))
 
    - For **macOS/Linux** users:
@@ -40,9 +40,10 @@ Upload your Access files to convert them into CSV.
         ```sh
         cd ~/Downloads/csv-manager/docker
         ```
-     3. Make the `start.sh` script executable (if not done already):
+        "~/Downloads/csv-manager/docker" is the path for the directory docker of the csv_manager.zip
+     3. Make the `start_os.sh` script executable (if not done already):
         ```sh
-        chmod +x start.sh
+        chmod +x start_os.sh
         ```
      4. Execute the script:
         ```sh
