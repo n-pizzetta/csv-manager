@@ -47,7 +47,7 @@ Upload your Access files to convert them into CSV.
         ```
      4. Execute the script:
         ```sh
-        ./start.sh
+        ./start_os.sh
         ```
      5. Open a web browser and navigate to `http://localhost:8501` to access the application. (or click on this link: [CIAO ACCESS!!!!](https://localhost:8501))
 
