@@ -1,6 +1,5 @@
 .DS_Store
 .Rhistory
 *.accdb
-*.csv
+*.cs
 *.xlsx
-docker/docker-compose.yml
